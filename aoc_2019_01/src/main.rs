@@ -10,19 +10,19 @@ fn main() -> Result<(), Box<dyn ::std::error::Error>> {
             |s| s.trim().parse().ok())
         .collect();
 
-    println!("Day1: {}", day1(&input));
-    println!("Day2: {}", day2(&input));
+    println!("Part1: {}", part1(&input));
+    println!("Part2: {}", part2(&input));
 
     Ok(())
 }
 
-fn day1(modules: &Vec<i32>) -> i32 {
+fn part1(modules: &Vec<i32>) -> i32 {
     modules.iter().map(
         |&s| calculate_fuel(s)
     ).sum()
 }
 
-fn day2(modules: &Vec<i32>) -> i32 {
+fn part2(modules: &Vec<i32>) -> i32 {
     modules.iter().map(
         |&s| calculate_fuel_recur(s)
     ).sum()

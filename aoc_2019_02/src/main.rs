@@ -88,13 +88,13 @@ fn main() -> Result<(), Box<dyn ::std::error::Error>> {
                     s.trim().parse().ok()
         ).collect();
 
-    println!("Day1: {}", day1(&input)?);
-    println!("Day2: {:?}", day2(&input)?);
+    println!("Part1: {}", part1(&input)?);
+    println!("Part2: {:?}", part2(&input)?);
 
     Ok(())
 }
 
-fn day1(input: &Vec<u32>) -> Result<(u32), Box<dyn ::std::error::Error>> {
+fn part1(input: &Vec<u32>) -> Result<(u32), Box<dyn ::std::error::Error>> {
     let mut mutInput = input.clone();
 
     mutInput[1] = 12;
@@ -106,7 +106,7 @@ fn day1(input: &Vec<u32>) -> Result<(u32), Box<dyn ::std::error::Error>> {
     Ok(output[0])
 }
 
-fn day2(input: &Vec<u32>) -> Result<(u32, u32), Box<dyn ::std::error::Error>> {
+fn part2(input: &Vec<u32>) -> Result<(u32, u32), Box<dyn ::std::error::Error>> {
     for noun in 0..99 {
         for verb in 0..99 {
             let mut testInput = input.clone();
