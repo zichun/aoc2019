@@ -14,6 +14,10 @@ enum Instruction {
     Mul { left_op: ParameterType, right_op: ParameterType, into: ParameterType },
     Input { into: ParameterType },
     Output { param: ParameterType },
+    JumpIfTrue { cond: ParameterType, to: ParameterType },
+    JumpIfFalse { cond: ParameterType, to: ParameterType },
+    LessThan { left_op: ParameterType, right_op: ParameterType, into: ParameterType },
+    Equals { left_op: ParameterType, right_op: ParameterType, into: ParameterType },
     Terminate,
 }
 
@@ -104,6 +108,32 @@ impl IntCode {
                     param: self.read_parameter(&mut parameter_mode, false)?
                 }
             }
+            5 => {
+                Instruction::JumpIfTrue {
+                    cond: self.read_parameter(&mut parameter_mode, false)?,
+                    to: self.read_parameter(&mut parameter_mode, false)?
+                }
+            }
+            6 => {
+                Instruction::JumpIfFalse {
+                    cond: self.read_parameter(&mut parameter_mode, false)?,
+                    to: self.read_parameter(&mut parameter_mode, false)?
+                }
+            }
+            7 => {
+                Instruction::LessThan {
+                    left_op: self.read_parameter(&mut parameter_mode, false)?,
+                    right_op: self.read_parameter(&mut parameter_mode, false)?,
+                    into: self.read_parameter(&mut parameter_mode, true)?
+                }
+            },
+            8 => {
+                Instruction::Equals {
+                    left_op: self.read_parameter(&mut parameter_mode, false)?,
+                    right_op: self.read_parameter(&mut parameter_mode, false)?,
+                    into: self.read_parameter(&mut parameter_mode, true)?
+                }
+            }
             99 => {
                 Instruction::Terminate
             }
@@ -150,18 +180,42 @@ impl IntCode {
                 Instruction::Add { left_op, right_op, into } => {
                     let sum = self.resolve_parameter_value(left_op)? + self.resolve_parameter_value(right_op)?;
                     self.write_memory(into, sum)?;
-                },
+                }
                 Instruction::Mul { left_op, right_op, into } => {
                     let product = self.resolve_parameter_value(left_op)? * self.resolve_parameter_value(right_op)?;
                     self.write_memory(into, product)?;
-                },
+                }
                 Instruction::Input { into } => {
                     let input_value = input_stream.pop_front().ok_or("Ran out of input")?;
                     self.write_memory(into, input_value)?;
-                },
+                }
                 Instruction::Output { param } => {
                     output_stream.push(self.resolve_parameter_value(param)?);
-                },
+                }
+                Instruction::JumpIfTrue { cond, to } => {
+                    let val = self.resolve_parameter_value(cond)?;
+                    if val != 0 {
+                        self.address_ptr = self.resolve_parameter_value(to)? as usize;
+                    }
+                }
+                Instruction::JumpIfFalse { cond, to } => {
+                    let val = self.resolve_parameter_value(cond)?;
+                    if val == 0 {
+                        self.address_ptr = self.resolve_parameter_value(to)? as usize;
+                    }
+                }
+                Instruction::LessThan { left_op, right_op, into } => {
+                    let less_than = if self.resolve_parameter_value(left_op)? < self.resolve_parameter_value(right_op)? {
+                        1
+                    } else { 0 };
+                    self.write_memory(into, less_than)?;
+                }
+                Instruction::Equals { left_op, right_op, into } => {
+                    let equals = if self.resolve_parameter_value(left_op)? == self.resolve_parameter_value(right_op)? {
+                        1
+                    } else { 0 };
+                    self.write_memory(into, equals)?;
+                }
                 Instruction::Terminate => {
                     return Ok((&self.memory, output_stream));
                 }
@@ -181,6 +235,7 @@ fn main() -> Result<()> {
         ).collect();
 
     println!("Part1: {:?}", part1(&input));
+    println!("Part2: {:?}", part2(&input));
 
     Ok(())
 }
@@ -191,6 +246,11 @@ fn part1(input: &Vec<i32>) -> Result<Vec<i32>> {
     Ok(output.1)
 }
 
+fn part2(input: &Vec<i32>) -> Result<Vec<i32>> {
+    let mut mem = IntCode::init(input);
+    let output = mem.run(&VecDeque::from(vec![5]))?;
+    Ok(output.1)
+}
 
 #[cfg(test)]
 mod test {
@@ -219,6 +279,73 @@ mod test {
         let mut mem = IntCode::init(&vec![3,0,4,0,3,1,4,1,99]);
         let run = mem.run(&VecDeque::from(vec![42, 58])).unwrap();
         assert_eq!(run.1, vec![42, 58]);
+    }
+
+    #[test]
+    fn test_is_equal_to_8_position() {
+        let mut mem = IntCode::init(&vec![3,9,8,9,10,9,4,9,99,-1,8]);
+        let run = mem.run(&VecDeque::from(vec![8])).unwrap();
+        assert_eq!(run.1, vec![1]);
+
+        let mut mem = IntCode::init(&vec![3,9,8,9,10,9,4,9,99,-1,8]);
+        let run = mem.run(&VecDeque::from(vec![7])).unwrap();
+        assert_eq!(run.1, vec![0]);
+    }
+
+    #[test]
+    fn test_less_than_8_position() {
+        let mut mem = IntCode::init(&vec![3,9,7,9,10,9,4,9,99,-1,8]);
+        let run = mem.run(&VecDeque::from(vec![8])).unwrap();
+        assert_eq!(run.1, vec![0]);
+
+        let mut mem = IntCode::init(&vec![3,9,7,9,10,9,4,9,99,-1,8]);
+        let run = mem.run(&VecDeque::from(vec![7])).unwrap();
+        assert_eq!(run.1, vec![1]);
+
+        let mut mem = IntCode::init(&vec![3,9,7,9,10,9,4,9,99,-1,8]);
+        let run = mem.run(&VecDeque::from(vec![42])).unwrap();
+        assert_eq!(run.1, vec![0]);
+    }
+
+    #[test]
+    fn test_is_equal_to_8_immediate() {
+        let mut mem = IntCode::init(&vec![3,3,1108,-1,8,3,4,3,99]);
+        let run = mem.run(&VecDeque::from(vec![8])).unwrap();
+        assert_eq!(run.1, vec![1]);
+
+        let mut mem = IntCode::init(&vec![3,3,1108,-1,8,3,4,3,99]);
+        let run = mem.run(&VecDeque::from(vec![7])).unwrap();
+        assert_eq!(run.1, vec![0]);
+    }
+
+    #[test]
+    fn test_is_less_than_8_immediate() {
+        let mut mem = IntCode::init(&vec![3,3,1107,-1,8,3,4,3,99]);
+        let run = mem.run(&VecDeque::from(vec![8])).unwrap();
+        assert_eq!(run.1, vec![0]);
+
+        let mut mem = IntCode::init(&vec![3,3,1107,-1,8,3,4,3,99]);
+        let run = mem.run(&VecDeque::from(vec![42])).unwrap();
+        assert_eq!(run.1, vec![0]);
+
+        let mut mem = IntCode::init(&vec![3,3,1107,-1,8,3,4,3,99]);
+        let run = mem.run(&VecDeque::from(vec![-3])).unwrap();
+        assert_eq!(run.1, vec![1]);
+    }
+
+    #[test]
+    fn test_day5_complex() {
+        let mut mem = IntCode::init(&vec![3,21,1008,21,8,20,1005,20,22,107,8,21,20,1006,20,31,1106,0,36,98,0,0,1002,21,125,20,4,20,1105,1,46,104,999,1105,1,46,1101,1000,1,20,4,20,1105,1,46,98,99]);
+        let run = mem.run(&VecDeque::from(vec![-42])).unwrap();
+        assert_eq!(run.1, vec![999]);
+
+        let mut mem = IntCode::init(&vec![3,21,1008,21,8,20,1005,20,22,107,8,21,20,1006,20,31,1106,0,36,98,0,0,1002,21,125,20,4,20,1105,1,46,104,999,1105,1,46,1101,1000,1,20,4,20,1105,1,46,98,99]);
+        let run = mem.run(&VecDeque::from(vec![8])).unwrap();
+        assert_eq!(run.1, vec![1000]);
+
+        let mut mem = IntCode::init(&vec![3,21,1008,21,8,20,1005,20,22,107,8,21,20,1006,20,31,1106,0,36,98,0,0,1002,21,125,20,4,20,1105,1,46,104,999,1105,1,46,1101,1000,1,20,4,20,1105,1,46,98,99]);
+        let run = mem.run(&VecDeque::from(vec![42])).unwrap();
+        assert_eq!(run.1, vec![1001]);
     }
 
 }
