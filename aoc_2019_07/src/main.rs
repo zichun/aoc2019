@@ -1,5 +1,6 @@
 use std::io::{self};
 use std::collections::VecDeque;
+use std::collections::HashSet;
 
 type Result<T> = ::std::result::Result<T, Box<dyn ::std::error::Error>>;
 
@@ -241,7 +242,6 @@ fn main() -> Result<()> {
 }
 
 const AMP_COUNT: usize = 5;
-const INPUT_RANGE: usize = 5;
 
 fn run_amps(input: &Vec<i32>, phase_settings: &Vec<usize>) -> Result<i32> {
     let mut amps: Vec<IntCode> = vec![IntCode::init(&input.clone()); AMP_COUNT];
@@ -257,38 +257,42 @@ fn run_amps(input: &Vec<i32>, phase_settings: &Vec<usize>) -> Result<i32> {
     Ok(prev_output)
 }
 
-fn all_permutation(collection: &mut Vec<i32>) {
-    
+fn all_permutation(input: &Vec<i32>, collection: &mut HashSet<usize>, builder: &mut Vec<usize>) -> i32 {
+    let items: Vec<usize> = collection.iter().cloned().collect();
+
+    if collection.len() == 0 {
+        let tr = run_amps(input, builder).unwrap_or(<i32>::min_value());
+        return tr;
+    }
+
+    let mut max: i32 = <i32>::min_value();
+
+    for ele in items {
+        collection.remove(&ele);
+        builder.push(ele);
+
+        let curr = all_permutation(input, collection, builder);
+        if curr > max {
+            max = curr;
+        }
+
+        builder.pop();
+        collection.insert(ele);
+    }
+
+    max
 }
 
-fn part1(input: &Vec<i32>) -> Result<i32> {
-
-    let mut phase_settings: Vec<usize> = vec![0; AMP_COUNT];
-
-    loop {
-        if phase_settings[AMP_COUNT - 1] >= INPUT_RANGE {
-            break;
-        }
-
-        let output = run_amps(input, &phase_settings)?;
-        println!("inputs: {:?} {}", phase_settings, output);
-
-        phase_settings[0] = phase_settings[0] + 1;
-        for i in 0..(AMP_COUNT-1) {
-            if phase_settings[i] >= AMP_COUNT {
-                phase_settings[i] = 0;
-                phase_settings[i+1] = phase_settings[i+1] + 1;
-            }
-        }
-    };
-
-    Ok(10)
+fn part1(input: &Vec<i32>) -> i32 {
+    let mut collection: HashSet<usize> = (0..AMP_COUNT).collect();
+    all_permutation(input, &mut collection, &mut vec![])
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
 
+    #[test]
     fn test_amp() {
         assert_eq!(run_amps(&vec![3,15,3,16,1002,16,10,16,1,16,15,15,4,15,99,0,0], &vec![4,3,2,1,0]).unwrap(), 43210);
         assert_eq!(run_amps(&vec![3,23,3,24,1002,24,10,24,1002,23,-1,23,101,5,23,23,1,24,23,23,4,23,99,0,0], &vec![0,1,2,3,4]).unwrap(), 54321);
@@ -297,7 +301,8 @@ mod test {
 
     #[test]
     fn test_part1() {
-//        println!("fkkk {}", part1(&vec![3,15,3,16,1002,16,10,16,1,16,15,15,4,15,99,0,0]).unwrap());
-        assert_eq!(1, 1);
+        assert_eq!(part1(&vec![3,15,3,16,1002,16,10,16,1,16,15,15,4,15,99,0,0]), 43210);
+        assert_eq!(part1(&vec![3,23,3,24,1002,24,10,24,1002,23,-1,23,101,5,23,23,1,24,23,23,4,23,99,0,0]), 54321);
+        assert_eq!(part1(&vec![3,31,3,32,1002,32,10,32,1001,31,-2,31,1007,31,0,33,1002,33,7,33,1,33,31,31,1,32,31,31,4,31,99,0,0,0]), 65210);
     }
 }
