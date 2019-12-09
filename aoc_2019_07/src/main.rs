@@ -241,14 +241,12 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-const AMP_COUNT: usize = 5;
-
 fn run_amps(input: &Vec<i32>, phase_settings: &Vec<usize>) -> Result<i32> {
-    let mut amps: Vec<IntCode> = vec![IntCode::init(&input.clone()); AMP_COUNT];
+    let mut amps: Vec<IntCode> = vec![IntCode::init(&input.clone()); phase_settings.len()];
 
     let mut prev_output: i32 = 0;
 
-    for i in 0..AMP_COUNT {
+    for i in 0..phase_settings.len() {
         let amp_input = &VecDeque::from(vec![phase_settings[i] as i32, prev_output]);
         let run = amps[i].run(&amp_input).unwrap();
         prev_output = *run.1.get(0).ok_or("Program did not produce an output")?;
@@ -257,11 +255,11 @@ fn run_amps(input: &Vec<i32>, phase_settings: &Vec<usize>) -> Result<i32> {
     Ok(prev_output)
 }
 
-fn all_permutation(input: &Vec<i32>, collection: &mut HashSet<usize>, builder: &mut Vec<usize>) -> i32 {
+fn all_permutation(input: &Vec<i32>, collection: &mut HashSet<usize>, builder: &mut Vec<usize>, f: &dyn Fn(&Vec<i32>, &Vec<usize>) -> Result<i32>) -> i32 {
     let items: Vec<usize> = collection.iter().cloned().collect();
 
     if collection.len() == 0 {
-        let tr = run_amps(input, builder).unwrap_or(<i32>::min_value());
+        let tr = f(input, builder).unwrap_or(<i32>::min_value());
         return tr;
     }
 
@@ -271,7 +269,7 @@ fn all_permutation(input: &Vec<i32>, collection: &mut HashSet<usize>, builder: &
         collection.remove(&ele);
         builder.push(ele);
 
-        let curr = all_permutation(input, collection, builder);
+        let curr = all_permutation(input, collection, builder, f);
         if curr > max {
             max = curr;
         }
@@ -284,8 +282,13 @@ fn all_permutation(input: &Vec<i32>, collection: &mut HashSet<usize>, builder: &
 }
 
 fn part1(input: &Vec<i32>) -> i32 {
-    let mut collection: HashSet<usize> = (0..AMP_COUNT).collect();
-    all_permutation(input, &mut collection, &mut vec![])
+    let mut collection: HashSet<usize> = (0..5).collect();
+    all_permutation(input, &mut collection, &mut vec![], &run_amps)
+}
+
+fn part2(input: &Vec<i32>) -> i32 {
+    let mut collection: HashSet<usize> = (5..10).collect();
+    
 }
 
 #[cfg(test)]
