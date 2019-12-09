@@ -19,12 +19,6 @@ impl Memory {
         }
     }
 
-    fn read_next(&mut self) -> Result<(Instruction), Box<dyn ::std::error::Error>> {
-        let nextValue = self.memory.get(self.address_ptr).ok_or("Invalid Address")?;
-        self.address_ptr++;
-        Ok(nextValue)
-    }
-
     fn read_instruction(&mut self) -> Result<(Instruction), Box<dyn ::std::error::Error>> {
         let opCode = self.memory.get(self.address_ptr).ok_or("Invalid Address")?;
         let instruction = match opCode {
