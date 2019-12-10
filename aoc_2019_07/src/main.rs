@@ -171,7 +171,7 @@ impl IntCode {
         Ok(())
     }
 
-    fn run(&mut self, input_stream: &VecDeque<i32>) -> Result<(&Vec<i32>, Vec<i32>)> {
+    fn run(&mut self, input_stream: &VecDeque<i32>) -> Result<(Vec<i32>, bool)> {
         let mut output_stream = Vec::<i32>::new();
         let mut input_stream = input_stream.clone();
 
@@ -188,8 +188,12 @@ impl IntCode {
                     self.write_memory(into, product)?;
                 }
                 Instruction::Input { into } => {
-                    let input_value = input_stream.pop_front().ok_or("Ran out of input")?;
-                    self.write_memory(into, input_value)?;
+                    if input_stream.len() > 0 {
+                        let input_value = input_stream.pop_front().ok_or("Ran out of input")?;
+                        self.write_memory(into, input_value)?;
+                    } else {
+                        return Ok((output_stream, false));
+                    }
                 }
                 Instruction::Output { param } => {
                     output_stream.push(self.resolve_parameter_value(param)?);
@@ -219,7 +223,7 @@ impl IntCode {
                     self.write_memory(into, equals)?;
                 }
                 Instruction::Terminate => {
-                    return Ok((&self.memory, output_stream));
+                    return Ok((output_stream, true));
                 }
             };
         }
@@ -249,7 +253,8 @@ fn run_amps(input: &Vec<i32>, phase_settings: &Vec<usize>) -> Result<i32> {
     for i in 0..phase_settings.len() {
         let amp_input = &VecDeque::from(vec![phase_settings[i] as i32, prev_output]);
         let run = amps[i].run(&amp_input).unwrap();
-        prev_output = *run.1.get(0).ok_or("Program did not produce an output")?;
+        assert_eq!(run.1, true);
+        prev_output = *run.0.get(0).ok_or("Program did not produce an output")?;
     }
 
     Ok(prev_output)
@@ -288,7 +293,7 @@ fn part1(input: &Vec<i32>) -> i32 {
 
 fn part2(input: &Vec<i32>) -> i32 {
     let mut collection: HashSet<usize> = (5..10).collect();
-    
+    5
 }
 
 #[cfg(test)]
