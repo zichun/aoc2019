@@ -4,6 +4,50 @@ use std::collections::HashSet;
 
 type Result<T> = ::std::result::Result<T, Box<dyn ::std::error::Error>>;
 
+enum StreamValue<T> {
+    Value(T),
+    EoS
+}
+
+struct Stream<T, C>
+    where C: Fn() -> (StreamValue<T>, Option<Box<C>>)
+{
+    closure: Option<Box<C>>
+}
+
+impl<T, C> Stream<T, C>
+    where C: Fn() -> (StreamValue<T>, Option<Box<C>>)
+{
+    fn new() -> Stream<T, C> {
+        Stream {
+            closure: None
+        }
+    }
+    fn next(&mut self) -> StreamValue<T> {
+        match self.closure {
+            Some(c) => {
+                let (car, cdr) = (c)();
+                self.closure = cdr;
+                car
+            },
+            None => StreamValue::EoS
+        }
+    }
+
+    fn cons(&mut self, value: &T) -> &Stream<T, C> {
+        let prevClosure = self.closure;
+        let x: Box<dyn Fn() -> (StreamValue<T>, Option<Box<C>>)> = Box::new(|| {
+            (
+                StreamValue::EoS,
+                prevClosure
+            )
+        });
+        self.closure = Some(x);
+
+        self
+    }
+}
+
 #[derive(Debug,PartialEq)]
 enum ParameterType {
     Ref(usize),
