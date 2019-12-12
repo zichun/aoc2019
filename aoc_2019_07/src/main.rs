@@ -4,45 +4,41 @@ use std::collections::HashSet;
 
 type Result<T> = ::std::result::Result<T, Box<dyn ::std::error::Error>>;
 
-enum StreamValue<T> {
-    Value(T),
+enum StreamValue<'a, T> {
+    Value(&'a T),
     EoS
 }
 
-struct Stream<T, C>
-    where C: Fn() -> (StreamValue<T>, Option<Box<C>>)
+struct StreamClosure<'a, T>(Box<dyn Fn() -> (StreamValue<'a, T>, StreamClosure<'a, T>)>);
+
+struct Stream<'a, T>
 {
-    closure: Option<Box<C>>
+    closure: StreamClosure<'a, T>
 }
 
-impl<T, C> Stream<T, C>
-    where C: Fn() -> (StreamValue<T>, Option<Box<C>>)
+impl<'a, T> Stream<'a, T>
 {
-    fn new() -> Stream<T, C> {
+    fn empty_stream() -> StreamClosure<'a, T> {
+        StreamClosure::<T>(Box::new(move || {
+            (StreamValue::EoS, Stream::<T>::empty_stream())
+        }))
+    }
+    fn new() -> Stream<'a, T> {
         Stream {
-            closure: None
+            closure: Stream::<'a, T>::empty_stream()
         }
     }
     fn next(&mut self) -> StreamValue<T> {
-        match self.closure {
-            Some(c) => {
-                let (car, cdr) = (c)();
-                self.closure = cdr;
-                car
-            },
-            None => StreamValue::EoS
-        }
+        let (car, cdr) = (self.closure.0)();
+        self.closure = cdr;
+        car
     }
 
-    fn cons(&mut self, value: &T) -> &Stream<T, C> {
-        let prevClosure = self.closure;
-        let x: Box<dyn Fn() -> (StreamValue<T>, Option<Box<C>>)> = Box::new(|| {
-            (
-                StreamValue::EoS,
-                prevClosure
-            )
-        });
-        self.closure = Some(x);
+    fn cons(&'a mut self, value: &'a T) -> &Stream<T> {
+        let prev_closure = self.closure;
+        self.closure = StreamClosure::<T>(Box::new(move || {
+            (StreamValue::Value(value), prev_closure)
+        }));
 
         self
     }
