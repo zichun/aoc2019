@@ -1,6 +1,6 @@
 function assert_eq(a, b) {
     if (a !== b) {
-        throw("a != b");
+        throw(a + " != " + b);
     }
     return a;
 }
@@ -15,7 +15,7 @@ class OpCode {
     constructor(param_mode) {
         this.param_mode = param_mode;
     }
-    resolve(memory, arg_value) {
+    resolve(memory, arg_value, relative_base) {
         let tr = [];
         const params = this.params();
         if (arg_value.length !== params.length) {
@@ -29,11 +29,19 @@ class OpCode {
                 } else {
                     tr.push(memory.read_at(arg_value[i]));
                 }
-            } else {
+            } else if (pm === 1) {
                 if (params[i] === 1) {
                     throw("parameter_mode invalid for write operation");
                 }
                 tr.push(arg_value[i]);
+            } else if (pm === 2) {
+                if (params[i] === 1) {
+                    tr.push(arg_value[i] + relative_base);
+                } else {
+                    tr.push(memory.read_at(arg_value[i] + relative_base));
+                }
+            } else {
+                throw("Invalid parameter mode" + pm);
             }
         }
 //        console.debug(this.constructor.name + ": " + tr);
@@ -46,7 +54,7 @@ class Add extends OpCode {
         return [0, 0, 1];
     }
     execute(machine, arg_value) {
-        let arg_value_resolved = this.resolve(machine.memory, arg_value);
+        let arg_value_resolved = this.resolve(machine.memory, arg_value, machine.relative_base);
         machine.memory.set(arg_value_resolved[2], arg_value_resolved[0] + arg_value_resolved[1]);
         return false;
     }
@@ -56,7 +64,7 @@ class Mul extends OpCode {
         return [0, 0, 1];
     }
     execute(machine, arg_value) {
-        let arg_value_resolved = this.resolve(machine.memory, arg_value);
+        let arg_value_resolved = this.resolve(machine.memory, arg_value, machine.relative_base);
         machine.memory.set(arg_value_resolved[2], arg_value_resolved[0] * arg_value_resolved[1]);
         return false;
     }
@@ -70,14 +78,18 @@ class Term extends OpCode {
 class Input extends OpCode {
     params() { return [1]; }
     execute(machine, arg_value, output_buffer, input_stream) {
-        let arg_value_resolved = this.resolve(machine.memory, arg_value);
-        machine.memory.set(arg_value_resolved[0], input_stream.car());
+        let arg_value_resolved = this.resolve(machine.memory, arg_value, machine.relative_base);
+        let input = input_stream.car();
+        if (typeof input === 'undefined') {
+            throw('Input EOF');
+        }
+        machine.memory.set(arg_value_resolved[0], input);
     }
 }
 class Output extends OpCode {
     params() { return [0]; }
     execute(machine, arg_value, output_buffer) {
-        let arg_value_resolved = this.resolve(machine.memory, arg_value);
+        let arg_value_resolved = this.resolve(machine.memory, arg_value, machine.relative_base);
         output_buffer.push(arg_value_resolved[0]);
         return false;
     }
@@ -85,7 +97,7 @@ class Output extends OpCode {
 class JumpIfTrue extends OpCode {
     params() { return [0, 0]; }
     execute(machine, arg_value) {
-        let arg_value_resolved = this.resolve(machine.memory, arg_value);
+        let arg_value_resolved = this.resolve(machine.memory, arg_value, machine.relative_base);
         if (arg_value_resolved[0] !== 0) {
             machine.memory_ptr = arg_value_resolved[1];
         }
@@ -95,7 +107,7 @@ class JumpIfTrue extends OpCode {
 class JumpIfFalse extends OpCode {
     params() { return [0, 0]; }
     execute(machine, arg_value) {
-        let arg_value_resolved = this.resolve(machine.memory, arg_value);
+        let arg_value_resolved = this.resolve(machine.memory, arg_value, machine.relative_base);
         if (arg_value_resolved[0] === 0) {
             machine.memory_ptr = arg_value_resolved[1];
         }
@@ -105,7 +117,7 @@ class JumpIfFalse extends OpCode {
 class LessThan extends OpCode {
     params() { return [0, 0, 1]; }
     execute(machine, arg_value) {
-        let arg_value_resolved = this.resolve(machine.memory, arg_value);
+        let arg_value_resolved = this.resolve(machine.memory, arg_value, machine.relative_base);
         machine.memory.set(arg_value_resolved[2], arg_value_resolved[0] < arg_value_resolved[1] ? 1 : 0);
         return false;
     }
@@ -113,8 +125,16 @@ class LessThan extends OpCode {
 class Equals extends OpCode {
     params() { return [0, 0, 1]; }
     execute(machine, arg_value) {
-        let arg_value_resolved = this.resolve(machine.memory, arg_value);
+        let arg_value_resolved = this.resolve(machine.memory, arg_value, machine.relative_base);
         machine.memory.set(arg_value_resolved[2], arg_value_resolved[0] === arg_value_resolved[1] ? 1 : 0);
+        return false;
+    }
+}
+class RelativeBase extends OpCode {
+    params() { return [0]; }
+    execute(machine, arg_value) {
+        let arg_value_resolved = this.resolve(machine.memory, arg_value, machine.relative_base);
+        machine.relative_base += arg_value_resolved[0];
         return false;
     }
 }
@@ -176,6 +196,9 @@ class Memory {
     }
 
     read_at(index) {
+        if (typeof this.memory[index] === 'undefined') {
+            return 0;
+        }
         return this.memory[index];
     }
 
@@ -192,6 +215,7 @@ class IntCodeMachine {
         this.output_buffer = [];
         this.is_terminal = false;
         this.input_stream = null;
+        this.relative_base = 0;
     }
 
     set_input_stream(input_stream) {
@@ -230,6 +254,8 @@ class IntCodeMachine {
                 return new LessThan(param_mode);
             case 8:
                 return new Equals(param_mode);
+            case 9:
+                return new RelativeBase(param_mode);
             case 99:
                 return new Term(param_mode);
             default:
@@ -467,9 +493,28 @@ function test_day7_2() {
     assert_eq(day_7_2([3,26,1001,26,-4,26,3,27,1002,27,2,27,1,27,26,27,4,27,1001,28,-1,28,1005,28,6,99,0,0,5]), 139629729);
     assert_eq(day_7_2([3,52,1001,52,-5,52,3,53,1,52,56,54,1007,54,5,55,1005,55,26,1001,54,-5,54,1105,1,12,1,53,54,53,1008,54,0,55,1001,55,1,55,2,53,55,53,4,53,1001,56,-1,56,1005,56,6,99,0,0,0,0,10]), 18216);
 }
+function test_relative_base() {
+    {
+        let machine = new IntCodeMachine(new Memory([109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99]));
+        machine.run_to_terminal();
+        assert_arr_eq(machine.output_buffer, [109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99]);
+    }
+    {
+        let machine = new IntCodeMachine(new Memory([1102,34915192,34915192,7,4,7,99,0]));
+        machine.run_to_terminal();
+        assert_eq(machine.output_buffer[0], 1219070632396864);
+    }
+    {
+        let machine = new IntCodeMachine(new Memory([104,1125899906842624,99]));
+        machine.run_to_terminal();
+        assert_eq(machine.output_buffer[0], 1125899906842624);
+    }
+}
 
 test_basic();
 test_io();
 test_jump();
 test_day7_1();
 test_day7_2();
+test_relative_base();
+
