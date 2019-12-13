@@ -4,46 +4,6 @@ use std::collections::HashSet;
 
 type Result<T> = ::std::result::Result<T, Box<dyn ::std::error::Error>>;
 
-enum StreamValue<'a, T> {
-    Value(&'a T),
-    EoS
-}
-
-struct StreamClosure<'a, T>(Box<dyn Fn() -> (StreamValue<'a, T>, StreamClosure<'a, T>)>);
-
-struct Stream<'a, T>
-{
-    closure: StreamClosure<'a, T>
-}
-
-impl<'a, T> Stream<'a, T>
-{
-    fn empty_stream() -> StreamClosure<'a, T> {
-        StreamClosure::<T>(Box::new(move || {
-            (StreamValue::EoS, Stream::<T>::empty_stream())
-        }))
-    }
-    fn new() -> Stream<'a, T> {
-        Stream {
-            closure: Stream::<'a, T>::empty_stream()
-        }
-    }
-    fn next(&mut self) -> StreamValue<T> {
-        let (car, cdr) = (self.closure.0)();
-        self.closure = cdr;
-        car
-    }
-
-    fn cons(&'a mut self, value: &'a T) -> &Stream<T> {
-        let prev_closure = self.closure;
-        self.closure = StreamClosure::<T>(Box::new(move || {
-            (StreamValue::Value(value), prev_closure)
-        }));
-
-        self
-    }
-}
-
 #[derive(Debug,PartialEq)]
 enum ParameterType {
     Ref(usize),
@@ -62,17 +22,50 @@ enum Instruction {
     Terminate,
 }
 
-#[derive(Clone, Debug)]
-struct IntCode {
+struct IntCode<'a> {
     memory: Vec<i32>,
     address_ptr: usize,
+    input_stream: Option<&'a mut InputStream<'a>>,
+    output_buffer: VecDeque<i32>,
+    is_terminated: bool
 }
 
-impl IntCode {
+struct OutputStream<'a>(&'a mut IntCode<'a>);
+
+impl<'a> Iterator for OutputStream<'a> {
+    type Item = i32;
+    fn next(&mut self) -> Option<i32> {
+        if self.0.output_buffer.len() > 0 {
+            self.0.output_buffer.pop_front()
+        } else {
+            self.0.run_to_next_output()
+        }
+    }
+}
+
+struct InputStream<'a>(VecDeque<i32>, Option<&'a mut OutputStream<'a>>);
+
+impl<'a> Iterator for InputStream<'a> {
+    type Item = i32;
+    fn next(&mut self) -> Option<i32> {
+        if self.0.len() > 0 {
+            self.0.pop_front()
+        } else if let Some(s) = &mut self.1 {
+            s.next()
+        } else {
+            None
+        }
+    }
+}
+
+impl<'a> IntCode<'a> {
     fn init(memory: &Vec<i32>) -> IntCode {
         IntCode {
             memory: memory.clone(),
-            address_ptr: 0
+            address_ptr: 0,
+            input_stream: None,
+            output_buffer: VecDeque::new(),
+            is_terminated: false
         }
     }
 
@@ -93,6 +86,18 @@ impl IntCode {
         }
 
         Ok((op_code as u32, parameter_mode))
+    }
+
+    fn set_input_stream(&mut self, input_stream: &'a mut InputStream<'a>) {
+        self.input_stream = Some(input_stream);
+    }
+
+    fn output_stream(&'a mut self) -> OutputStream<'a> {
+        OutputStream(self)
+    }
+
+    fn run_to_next_output(&mut self) -> Option<i32> {
+        None
     }
 
     fn read_parameter(
@@ -211,10 +216,7 @@ impl IntCode {
         Ok(())
     }
 
-    fn run(&mut self, input_stream: &VecDeque<i32>) -> Result<(Vec<i32>, bool)> {
-        let mut output_stream = Vec::<i32>::new();
-        let mut input_stream = input_stream.clone();
-
+    fn run_to_termination(&mut self) -> Result<()> {
         loop {
             let instruction = self.read_instruction()?;
 
@@ -228,15 +230,16 @@ impl IntCode {
                     self.write_memory(into, product)?;
                 }
                 Instruction::Input { into } => {
-                    if input_stream.len() > 0 {
-                        let input_value = input_stream.pop_front().ok_or("Ran out of input")?;
+                    if let Some(s) = &mut self.input_stream {
+                        let input_value = s.next().ok_or("Ran out of input")?;
+                        println!("INPUT VALUE: {}", input_value);
                         self.write_memory(into, input_value)?;
                     } else {
-                        return Ok((output_stream, false));
+                        return Err("No input streams defined".into());
                     }
                 }
                 Instruction::Output { param } => {
-                    output_stream.push(self.resolve_parameter_value(param)?);
+                    self.output_buffer.push_back(self.resolve_parameter_value(param)?);
                 }
                 Instruction::JumpIfTrue { cond, to } => {
                     let val = self.resolve_parameter_value(cond)?;
@@ -263,7 +266,8 @@ impl IntCode {
                     self.write_memory(into, equals)?;
                 }
                 Instruction::Terminate => {
-                    return Ok((output_stream, true));
+                    self.is_terminated = true;
+                    return Ok(());
                 }
             };
         }
@@ -286,15 +290,23 @@ fn main() -> Result<()> {
 }
 
 fn run_amps(input: &Vec<i32>, phase_settings: &Vec<usize>) -> Result<i32> {
-    let mut amps: Vec<IntCode> = vec![IntCode::init(&input.clone()); phase_settings.len()];
-
+    let mut amps: Vec<IntCode> = Vec::new();
+    let mut amp_inputs: Vec<InputStream> = Vec::new();
     let mut prev_output: i32 = 0;
 
     for i in 0..phase_settings.len() {
-        let amp_input = &VecDeque::from(vec![phase_settings[i] as i32, prev_output]);
-        let run = amps[i].run(&amp_input).unwrap();
-        assert_eq!(run.1, true);
-        prev_output = *run.0.get(0).ok_or("Program did not produce an output")?;
+        amps.push(IntCode::init(&input));
+        amp_inputs.push(InputStream(VecDeque::from(vec![phase_settings[i] as i32]), None));
+    }
+
+    let mut input_slices = amp_inputs.iter_mut();
+
+    for i in 0..phase_settings.len() {
+        let x = input_slices.next().unwrap();
+        x.0.push_back(prev_output);
+        amps[i].set_input_stream(&mut *x);
+        amps[i].run_to_termination().unwrap();
+        prev_output = *amps[i].output_buffer.get(0).ok_or("Program did not produce an output")?;
     }
 
     Ok(prev_output)
@@ -331,9 +343,45 @@ fn part1(input: &Vec<i32>) -> i32 {
     all_permutation(input, &mut collection, &mut vec![], &run_amps)
 }
 
+fn run_amps_part2(input: &Vec<i32>, phase_settings: &Vec<usize>) -> Result<i32> {
+    let mut amps: Vec<IntCode> = Vec::new();
+    let mut amp_inputs: Vec<InputStream> = Vec::new();
+    let mut prev_output: i32 = 0;
+
+    for i in 0..phase_settings.len() {
+        amps.push(IntCode::init(&input));
+        amp_inputs.push(InputStream(VecDeque::from(vec![phase_settings[i] as i32]), None));
+    }
+
+    {
+        let mut input_slices = amp_inputs.iter_mut();
+
+        for i in 0..phase_settings.len() {
+            let x = input_slices.next().unwrap();
+            amps[i].set_input_stream(&mut *x);
+        }
+    }
+
+    let mut output_streams: Vec<OutputStream> = Vec::new();
+    let mut amps_slices = amps.iter_mut();
+    for i in 0..phase_settings.len() {
+        let a = amps_slices.next().unwrap();
+        output_streams.push(a.output_stream());
+    }
+
+    {
+        let mut input_slices = amp_inputs.iter_mut();
+
+        for i in 0..phase_settings.len() {
+            let x = input_slices.next().unwrap();
+        }
+    }
+    Ok(prev_output)
+}
+
 fn part2(input: &Vec<i32>) -> i32 {
     let mut collection: HashSet<usize> = (5..10).collect();
-    5
+    all_permutation(input, &mut collection, &mut vec![], &run_amps_part2)
 }
 
 #[cfg(test)]
