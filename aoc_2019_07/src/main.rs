@@ -13,7 +13,7 @@ enum ParameterType {
 enum Instruction {
     Add { left_op: ParameterType, right_op: ParameterType, into: ParameterType },
     Mul { left_op: ParameterType, right_op: ParameterType, into: ParameterType },
-    Input { into: ParameterType },
+    Inputf { into: ParameterType },
     Output { param: ParameterType },
     JumpIfTrue { cond: ParameterType, to: ParameterType },
     JumpIfFalse { cond: ParameterType, to: ParameterType },
@@ -22,10 +22,10 @@ enum Instruction {
     Terminate,
 }
 
-struct IntCode<'a> {
+struct IntCode {
     memory: Vec<i32>,
     address_ptr: usize,
-    input_stream: Option<&'a mut InputStream<'a>>,
+    input_stream: InputStream,
     output_buffer: VecDeque<i32>,
     is_terminated: bool
 }
@@ -43,9 +43,9 @@ impl<'a> Iterator for OutputStream<'a> {
     }
 }
 
-struct InputStream<'a>(VecDeque<i32>, Option<&'a mut OutputStream<'a>>);
+struct InputStream(VecDeque<i32>, Option<&mut OutputStream>);
 
-impl<'a> Iterator for InputStream<'a> {
+impl Iterator for InputStream {
     type Item = i32;
     fn next(&mut self) -> Option<i32> {
         if self.0.len() > 0 {
@@ -58,8 +58,8 @@ impl<'a> Iterator for InputStream<'a> {
     }
 }
 
-impl<'a> IntCode<'a> {
-    fn init(memory: &Vec<i32>) -> IntCode {
+impl IntCode {
+    fn init(memory: &Vec<i32>, input_stream: InputStream) -> IntCode {
         IntCode {
             memory: memory.clone(),
             address_ptr: 0,
@@ -88,11 +88,7 @@ impl<'a> IntCode<'a> {
         Ok((op_code as u32, parameter_mode))
     }
 
-    fn set_input_stream(&mut self, input_stream: &'a mut InputStream<'a>) {
-        self.input_stream = Some(input_stream);
-    }
-
-    fn output_stream(&'a mut self) -> OutputStream<'a> {
+    fn output_stream(self) -> OutputStream {
         OutputStream(self)
     }
 
