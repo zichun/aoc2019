@@ -1,6 +1,8 @@
 use std::io::{self};
 use std::collections::VecDeque;
 use std::collections::HashSet;
+use std::iter::*;
+use std::cell::RefCell;
 
 type Result<T> = ::std::result::Result<T, Box<dyn ::std::error::Error>>;
 
@@ -13,7 +15,7 @@ enum ParameterType {
 enum Instruction {
     Add { left_op: ParameterType, right_op: ParameterType, into: ParameterType },
     Mul { left_op: ParameterType, right_op: ParameterType, into: ParameterType },
-    Inputf { into: ParameterType },
+    Input { into: ParameterType },
     Output { param: ParameterType },
     JumpIfTrue { cond: ParameterType, to: ParameterType },
     JumpIfFalse { cond: ParameterType, to: ParameterType },
@@ -22,17 +24,19 @@ enum Instruction {
     Terminate,
 }
 
-struct IntCode {
+struct IntCode<T: Iterator> {
     memory: Vec<i32>,
     address_ptr: usize,
-    input_stream: InputStream,
+    input_stream: T,
     output_buffer: VecDeque<i32>,
     is_terminated: bool
 }
 
-struct OutputStream<'a>(&'a mut IntCode<'a>);
+struct OutputStream<T: Iterator>(IntCode<T>);
 
-impl<'a> Iterator for OutputStream<'a> {
+impl<T> Iterator for OutputStream<T> where
+    T: Iterator<Item = i32>
+{
     type Item = i32;
     fn next(&mut self) -> Option<i32> {
         if self.0.output_buffer.len() > 0 {
@@ -43,27 +47,13 @@ impl<'a> Iterator for OutputStream<'a> {
     }
 }
 
-struct InputStream(VecDeque<i32>, Option<&mut OutputStream>);
-
-impl Iterator for InputStream {
-    type Item = i32;
-    fn next(&mut self) -> Option<i32> {
-        if self.0.len() > 0 {
-            self.0.pop_front()
-        } else if let Some(s) = &mut self.1 {
-            s.next()
-        } else {
-            None
-        }
-    }
-}
-
-impl IntCode {
-    fn init(memory: &Vec<i32>, input_stream: InputStream) -> IntCode {
+impl<T> IntCode<T> where
+    T: Iterator<Item = i32> {
+    fn init(memory: &Vec<i32>, input_stream: T) -> IntCode<T> {
         IntCode {
             memory: memory.clone(),
             address_ptr: 0,
-            input_stream: None,
+            input_stream: input_stream,
             output_buffer: VecDeque::new(),
             is_terminated: false
         }
@@ -88,12 +78,18 @@ impl IntCode {
         Ok((op_code as u32, parameter_mode))
     }
 
-    fn output_stream(self) -> OutputStream {
+    fn output_stream(self) -> OutputStream<T> {
         OutputStream(self)
     }
 
     fn run_to_next_output(&mut self) -> Option<i32> {
-        None
+        while self.output_buffer.len() == 0 && self.is_terminated == false {
+            // bad code; output iterator should be a result
+            self.run_tick().unwrap();
+        }
+
+        println!("{:?}", self.output_buffer);
+        self.output_buffer.pop_front()
     }
 
     fn read_parameter(
@@ -124,7 +120,7 @@ impl IntCode {
         let op_code = self.memory.get(self.address_ptr).ok_or("Invalid Address, address pointer out of bounds when reading instruction")?;
         self.address_ptr = self.address_ptr + 1;
 
-        let (op_code, mut parameter_mode) = IntCode::parse_op_code(op_code)?;
+        let (op_code, mut parameter_mode) = IntCode::<T>::parse_op_code(op_code)?;
 
         let instruction = match op_code {
             1 => {
@@ -212,61 +208,62 @@ impl IntCode {
         Ok(())
     }
 
-    fn run_to_termination(&mut self) -> Result<()> {
-        loop {
-            let instruction = self.read_instruction()?;
+    fn run_tick(&mut self) -> Result<()> {
+        let instruction = self.read_instruction()?;
 
-            match instruction {
-                Instruction::Add { left_op, right_op, into } => {
-                    let sum = self.resolve_parameter_value(left_op)? + self.resolve_parameter_value(right_op)?;
-                    self.write_memory(into, sum)?;
+        match instruction {
+            Instruction::Add { left_op, right_op, into } => {
+                let sum = self.resolve_parameter_value(left_op)? + self.resolve_parameter_value(right_op)?;
+                self.write_memory(into, sum)?;
+            }
+            Instruction::Mul { left_op, right_op, into } => {
+                let product = self.resolve_parameter_value(left_op)? * self.resolve_parameter_value(right_op)?;
+                self.write_memory(into, product)?;
+            }
+            Instruction::Input { into } => {
+                let input_value = self.input_stream.next().ok_or("Ran out of input")?;
+                self.write_memory(into, input_value)?;
+            }
+            Instruction::Output { param } => {
+                self.output_buffer.push_back(self.resolve_parameter_value(param)?);
+            }
+            Instruction::JumpIfTrue { cond, to } => {
+                let val = self.resolve_parameter_value(cond)?;
+                if val != 0 {
+                    self.address_ptr = self.resolve_parameter_value(to)? as usize;
                 }
-                Instruction::Mul { left_op, right_op, into } => {
-                    let product = self.resolve_parameter_value(left_op)? * self.resolve_parameter_value(right_op)?;
-                    self.write_memory(into, product)?;
+            }
+            Instruction::JumpIfFalse { cond, to } => {
+                let val = self.resolve_parameter_value(cond)?;
+                if val == 0 {
+                    self.address_ptr = self.resolve_parameter_value(to)? as usize;
                 }
-                Instruction::Input { into } => {
-                    if let Some(s) = &mut self.input_stream {
-                        let input_value = s.next().ok_or("Ran out of input")?;
-                        println!("INPUT VALUE: {}", input_value);
-                        self.write_memory(into, input_value)?;
-                    } else {
-                        return Err("No input streams defined".into());
-                    }
-                }
-                Instruction::Output { param } => {
-                    self.output_buffer.push_back(self.resolve_parameter_value(param)?);
-                }
-                Instruction::JumpIfTrue { cond, to } => {
-                    let val = self.resolve_parameter_value(cond)?;
-                    if val != 0 {
-                        self.address_ptr = self.resolve_parameter_value(to)? as usize;
-                    }
-                }
-                Instruction::JumpIfFalse { cond, to } => {
-                    let val = self.resolve_parameter_value(cond)?;
-                    if val == 0 {
-                        self.address_ptr = self.resolve_parameter_value(to)? as usize;
-                    }
-                }
-                Instruction::LessThan { left_op, right_op, into } => {
-                    let less_than = if self.resolve_parameter_value(left_op)? < self.resolve_parameter_value(right_op)? {
-                        1
-                    } else { 0 };
-                    self.write_memory(into, less_than)?;
-                }
-                Instruction::Equals { left_op, right_op, into } => {
-                    let equals = if self.resolve_parameter_value(left_op)? == self.resolve_parameter_value(right_op)? {
-                        1
-                    } else { 0 };
-                    self.write_memory(into, equals)?;
-                }
-                Instruction::Terminate => {
-                    self.is_terminated = true;
-                    return Ok(());
-                }
-            };
+            }
+            Instruction::LessThan { left_op, right_op, into } => {
+                let less_than = if self.resolve_parameter_value(left_op)? < self.resolve_parameter_value(right_op)? {
+                    1
+                } else { 0 };
+                self.write_memory(into, less_than)?;
+            }
+            Instruction::Equals { left_op, right_op, into } => {
+                let equals = if self.resolve_parameter_value(left_op)? == self.resolve_parameter_value(right_op)? {
+                    1
+                } else { 0 };
+                self.write_memory(into, equals)?;
+            }
+            Instruction::Terminate => {
+                self.is_terminated = true;
+            }
+        };
+
+        Ok(())
+    }
+
+    fn run_to_termination(&mut self) -> Result<()> {
+        while self.is_terminated == false {
+            self.run_tick()?;
         }
+        Ok(())
     }
 }
 
@@ -280,32 +277,27 @@ fn main() -> Result<()> {
                     s.trim().parse().ok()
         ).collect();
 
-    println!("Part1: {:?}", part1(&input));
-
     Ok(())
 }
 
 fn run_amps(input: &Vec<i32>, phase_settings: &Vec<usize>) -> Result<i32> {
-    let mut amps: Vec<IntCode> = Vec::new();
-    let mut amp_inputs: Vec<InputStream> = Vec::new();
-    let mut prev_output: i32 = 0;
+    let amp_0 = IntCode::init(&input,
+                              once(phase_settings[0] as i32)
+                              .chain(once(0)));
+    let amp_1 = IntCode::init(&input,
+                              once(phase_settings[1] as i32)
+                              .chain(amp_0.output_stream()));
+    let amp_2 = IntCode::init(&input,
+                              once(phase_settings[2] as i32)
+                              .chain(amp_1.output_stream()));
+    let amp_3 = IntCode::init(&input,
+                              once(phase_settings[3] as i32)
+                              .chain(amp_2.output_stream()));
+    let amp_4 = IntCode::init(&input,
+                              once(phase_settings[4] as i32)
+                              .chain(amp_3.output_stream()));
 
-    for i in 0..phase_settings.len() {
-        amps.push(IntCode::init(&input));
-        amp_inputs.push(InputStream(VecDeque::from(vec![phase_settings[i] as i32]), None));
-    }
-
-    let mut input_slices = amp_inputs.iter_mut();
-
-    for i in 0..phase_settings.len() {
-        let x = input_slices.next().unwrap();
-        x.0.push_back(prev_output);
-        amps[i].set_input_stream(&mut *x);
-        amps[i].run_to_termination().unwrap();
-        prev_output = *amps[i].output_buffer.get(0).ok_or("Program did not produce an output")?;
-    }
-
-    Ok(prev_output)
+    amp_4.output_stream().next().ok_or("No output".into())
 }
 
 fn all_permutation(input: &Vec<i32>, collection: &mut HashSet<usize>, builder: &mut Vec<usize>, f: &dyn Fn(&Vec<i32>, &Vec<usize>) -> Result<i32>) -> i32 {
@@ -340,39 +332,32 @@ fn part1(input: &Vec<i32>) -> i32 {
 }
 
 fn run_amps_part2(input: &Vec<i32>, phase_settings: &Vec<usize>) -> Result<i32> {
-    let mut amps: Vec<IntCode> = Vec::new();
-    let mut amp_inputs: Vec<InputStream> = Vec::new();
-    let mut prev_output: i32 = 0;
+    // adapted from https://github.com/Awfa/advent_of_code_2019/blob/master/src/day7.rs
+    let pipe = RefCell::new(VecDeque::<i32>::new());
 
-    for i in 0..phase_settings.len() {
-        amps.push(IntCode::init(&input));
-        amp_inputs.push(InputStream(VecDeque::from(vec![phase_settings[i] as i32]), None));
-    }
-
-    {
-        let mut input_slices = amp_inputs.iter_mut();
-
-        for i in 0..phase_settings.len() {
-            let x = input_slices.next().unwrap();
-            amps[i].set_input_stream(&mut *x);
-        }
-    }
-
-    let mut output_streams: Vec<OutputStream> = Vec::new();
-    let mut amps_slices = amps.iter_mut();
-    for i in 0..phase_settings.len() {
-        let a = amps_slices.next().unwrap();
-        output_streams.push(a.output_stream());
-    }
-
-    {
-        let mut input_slices = amp_inputs.iter_mut();
-
-        for i in 0..phase_settings.len() {
-            let x = input_slices.next().unwrap();
-        }
-    }
-    Ok(prev_output)
+    let amp_0 = IntCode::init(&input,
+                              once(phase_settings[0] as i32)
+                              .chain(once(0))
+                              .chain(from_fn(|| {
+                                  Some(pipe.borrow_mut().pop_front().unwrap())
+                              })));
+    let amp_1 = IntCode::init(&input,
+                              once(phase_settings[1] as i32)
+                              .chain(amp_0.output_stream()));
+    let amp_2 = IntCode::init(&input,
+                              once(phase_settings[2] as i32)
+                              .chain(amp_1.output_stream()));
+    let amp_3 = IntCode::init(&input,
+                              once(phase_settings[3] as i32)
+                              .chain(amp_2.output_stream()));
+    let amp_4 = IntCode::init(&input,
+                              once(phase_settings[4] as i32)
+                              .chain(amp_3.output_stream()));
+    let amp_4_output = amp_4.output_stream().map(|value| {
+        pipe.borrow_mut().push_back(value);
+        value
+    });
+    amp_4_output.last().ok_or("No output".into())
 }
 
 fn part2(input: &Vec<i32>) -> i32 {
@@ -396,5 +381,11 @@ mod test {
         assert_eq!(part1(&vec![3,15,3,16,1002,16,10,16,1,16,15,15,4,15,99,0,0]), 43210);
         assert_eq!(part1(&vec![3,23,3,24,1002,24,10,24,1002,23,-1,23,101,5,23,23,1,24,23,23,4,23,99,0,0]), 54321);
         assert_eq!(part1(&vec![3,31,3,32,1002,32,10,32,1001,31,-2,31,1007,31,0,33,1002,33,7,33,1,33,31,31,1,32,31,31,4,31,99,0,0,0]), 65210);
+    }
+
+    #[test]
+    fn test_part2() {
+        assert_eq!(part2(&vec![3,26,1001,26,-4,26,3,27,1002,27,2,27,1,27,26,27,4,27,1001,28,-1,28,1005,28,6,99,0,0,5]), 139629729);
+        assert_eq!(part2(&vec![3,52,1001,52,-5,52,3,53,1,52,56,54,1007,54,5,55,1005,55,26,1001,54,-5,54,1105,1,12,1,53,54,53,1008,54,0,55,1001,55,1,55,2,53,55,53,4,53,1001,56,-1,56,1005,56,6,99,0,0,0,0,10]), 18216);
     }
 }
