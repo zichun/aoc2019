@@ -336,6 +336,11 @@ impl Room {
 
 struct MapState(Vec<Room>, usize);
 
+const UP_INDEX: usize = 1;
+const DOWN_INDEX: usize = 2;
+const LEFT_INDEX: usize = 3;
+const RIGHT_INDEX: usize = 4;
+
 impl MapState {
     fn get_room_dir_mut<'a>(room: &'a mut Room, dir: &usize, flip: bool) -> Result<&'a mut ExploreState> {
         let mut new_dir = *dir;
@@ -344,10 +349,10 @@ impl MapState {
         }
 
         Ok(match new_dir {
-            1 => &mut room.up,
-            2 => &mut room.down,
-            3 => &mut room.left,
-            4 => &mut room.right,
+            UP_INDEX => &mut room.up,
+            DOWN_INDEX => &mut room.down,
+            LEFT_INDEX => &mut room.left,
+            RIGHT_INDEX => &mut room.right,
             _ => { return Err("Invalid room direction!".into()); }
         })
 
@@ -355,7 +360,7 @@ impl MapState {
     fn insert_wall(&mut self, dir: usize) -> Result<()> {
         let from = self.1;
         let curr_room = self.0.get_mut(from).ok_or("Invalid room index")?;
-        let mut dir_ref = MapState::get_room_dir_mut(curr_room, &dir, false)?;
+        let dir_ref = MapState::get_room_dir_mut(curr_room, &dir, false)?;
         if *dir_ref != ExploreState::Unknown {
             return Err("room direction already exists".into());
         }
@@ -370,7 +375,7 @@ impl MapState {
 
         {
             let curr_room = self.0.get_mut(from).ok_or("Invalid room index")?;
-            let mut dir_ref = MapState::get_room_dir_mut(curr_room, &dir, false)?;
+            let dir_ref = MapState::get_room_dir_mut(curr_room, &dir, false)?;
 
             if *dir_ref == ExploreState::Wall {
                 return Err("walking into a wall".into());
@@ -384,7 +389,7 @@ impl MapState {
 
         {
             let mut new_room = Room::new();
-            let mut dir_ref = MapState::get_room_dir_mut(&mut new_room, &dir, true)?;
+            let dir_ref = MapState::get_room_dir_mut(&mut new_room, &dir, true)?;
 
             *dir_ref = ExploreState::Room(self.1);
             self.0.push(new_room);
@@ -400,13 +405,13 @@ impl MapState {
         let curr_room = self.0.get(from).ok_or("Invalid room index")?;
 
         if curr_room.up == ExploreState::Unknown {
-            Ok(1)
+            Ok(UP_INDEX)
         } else if curr_room.down == ExploreState::Unknown {
-            Ok(2)
+            Ok(DOWN_INDEX)
         } else if curr_room.left == ExploreState::Unknown {
-            Ok(3)
+            Ok(LEFT_INDEX)
         } else if curr_room.right == ExploreState::Unknown {
-            Ok(4)
+            Ok(RIGHT_INDEX)
         } else {
             // bad code: this should be a proper type rather than usize
             Ok(0)
@@ -414,11 +419,11 @@ impl MapState {
     }
 
     fn flip(dir: &usize) -> usize {
-        match dir {
-            1 => 2,
-            2 => 1,
-            3 => 4,
-            4 => 3,
+        match *dir {
+            UP_INDEX => DOWN_INDEX,
+            DOWN_INDEX => UP_INDEX,
+            LEFT_INDEX => RIGHT_INDEX,
+            RIGHT_INDEX => LEFT_INDEX,
             _ => { panic!("bad direction"); }
         }
     }
