@@ -304,7 +304,8 @@ fn main() -> Result<()> {
                     s.trim().parse().ok()
         ).collect();
 
-    println!("{}", part1(&input)?);
+    let ans = part1_and_2(&input)?;
+    println!("{}\n{}", ans.0, ans.1);
 
     Ok(())
 }
@@ -331,6 +332,37 @@ impl Room {
             left: ExploreState::Unknown,
             right: ExploreState::Unknown
         }
+    }
+
+    fn next_unexplored(&self) -> Option<usize> {
+        if self.up == ExploreState::Unknown {
+            Some(UP_INDEX)
+        } else if self.down == ExploreState::Unknown {
+            Some(DOWN_INDEX)
+        } else if self.left == ExploreState::Unknown {
+            Some(LEFT_INDEX)
+        } else if self.right == ExploreState::Unknown {
+            Some(RIGHT_INDEX)
+        } else {
+            None
+        }
+    }
+
+    fn adjacent(&self) -> Vec<usize> {
+        let mut rooms = Vec::new();
+        if let ExploreState::Room(r) = self.up {
+            rooms.push(r);
+        }
+        if let ExploreState::Room(r) = self.down {
+            rooms.push(r);
+        }
+        if let ExploreState::Room(r) = self.left {
+            rooms.push(r);
+        }
+        if let ExploreState::Room(r) = self.right {
+            rooms.push(r);
+        }
+        rooms
     }
 }
 
@@ -359,7 +391,7 @@ impl MapState {
     }
     fn insert_wall(&mut self, dir: usize) -> Result<()> {
         let from = self.1;
-        let curr_room = self.0.get_mut(from).ok_or("Invalid room index")?;
+        let curr_room = self.0 .get_mut(from).ok_or("Invalid room index")?;
         let dir_ref = MapState::get_room_dir_mut(curr_room, &dir, false)?;
         if *dir_ref != ExploreState::Unknown {
             return Err("room direction already exists".into());
@@ -403,18 +435,7 @@ impl MapState {
     fn next_unexplored(&self) -> Result<Option<usize>> {
         let from = self.1;
         let curr_room = self.0.get(from).ok_or("Invalid room index")?;
-
-        if curr_room.up == ExploreState::Unknown {
-            Ok(Some(UP_INDEX))
-        } else if curr_room.down == ExploreState::Unknown {
-            Ok(Some(DOWN_INDEX))
-        } else if curr_room.left == ExploreState::Unknown {
-            Ok(Some(LEFT_INDEX))
-        } else if curr_room.right == ExploreState::Unknown {
-            Ok(Some(RIGHT_INDEX))
-        } else {
-            Ok(None)
-        }
+        Ok(curr_room.next_unexplored())
     }
 
     fn flip(dir: &usize) -> usize {
@@ -436,9 +457,10 @@ impl MapState {
     }
 }
 
-fn part1(input: &Vec<i64>) -> Result<usize> {
+fn part1_and_2(input: &Vec<i64>) -> Result<(usize, usize)> {
     // the follow code assumes that the maze forms a tree
     let map_state_cell = RefCell::new(MapState::new());
+    let is_complete = RefCell::new(false);
     let last_move = RefCell::new(0 as usize);
     let breadcrumps = RefCell::new(Vec::new());
 
@@ -449,39 +471,89 @@ fn part1(input: &Vec<i64>) -> Result<usize> {
             Some(next_dir as i64)
         } else {
             if breadcrumps.borrow().len() == 0 {
-                panic!("Could not find goal");
+                // Completed search and we're back to origin. Walk a random direction
+                *is_complete.borrow_mut() = true;
+                Some(1)
             } else {
                 let last = breadcrumps.borrow_mut().pop().unwrap();
                 *last_move.borrow_mut() = last;
-                println!("backtrackking: {}", last);
                 Some(last as i64)
             }
         }
     }));
 
     let mut output = machine.output_stream();
+    let mut part1_answer = 0;
+    let mut goal_index = 0;
 
-    loop {
+    while *is_complete.borrow() == false {
         let result = output.next().unwrap();
 
-        println!(" visiting dir {}", *last_move.borrow());
         match result {
-            0 => { // wall
-                map_state_cell.borrow_mut().insert_wall(*last_move.borrow())?;
+            0 => { // Wall
+                if let Err(e) = map_state_cell.borrow_mut().insert_wall(*last_move.borrow()) {
+                    if *is_complete.borrow() == false {
+                        return Err(e);
+                    }
+                }
             }
-            1 => { // move
+            1 => { // New Room
                 let new_index = map_state_cell.borrow_mut().insert_room_and_move(*last_move.borrow())?;
                 if new_index + 1 == map_state_cell.borrow().last_index() {
                     breadcrumps.borrow_mut().push(MapState::flip(&last_move.borrow()));
                 }
-                println!(" visiting dir {}, now at {}", *last_move.borrow(), new_index);
             }
-            2 => { // goal
-                return Ok(breadcrumps.borrow().len() + 1);
+            2 => { // Goal Room
+                let new_index = map_state_cell.borrow_mut().insert_room_and_move(*last_move.borrow())?;
+                if new_index + 1 == map_state_cell.borrow().last_index() {
+                    breadcrumps.borrow_mut().push(MapState::flip(&last_move.borrow()));
+                }
+                goal_index = new_index;
+                part1_answer = breadcrumps.borrow().len();
             }
             _ => {
                 return Err("Bad output!".into());
             }
         }
     }
+
+    let part2_answer = part2(&map_state_cell.borrow(), goal_index)?;
+
+    Ok((part1_answer, part2_answer))
+}
+
+struct QueueEle {
+    room_index: usize,
+    tick: usize
+}
+
+fn part2(map: &MapState, goal_index: usize) -> Result<usize> {
+    let mut queue = VecDeque::new();
+    let mut visited = vec![false; map.0.len()];
+
+    visited[goal_index] = true;
+    queue.push_back(QueueEle {
+        room_index: goal_index,
+        tick: 0
+    });
+
+    let mut ans = 0;
+    while queue.len() > 0 {
+        let top = queue.pop_front().unwrap();
+        let room = map.0.get(top.room_index).ok_or("Invalid index")?;
+        let adj_rooms = room.adjacent();
+
+        for r in adj_rooms {
+            if visited[r] == false {
+                visited[r] = true;
+                queue.push_back(QueueEle {
+                    room_index: r,
+                    tick: top.tick + 1
+                });
+            }
+        }
+        ans = top.tick;
+    }
+
+    Ok(ans)
 }
