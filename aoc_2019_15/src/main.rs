@@ -400,21 +400,20 @@ impl MapState {
         Ok(new_room_index)
     }
 
-    fn next_unexplored(&self) -> Result<usize> {
+    fn next_unexplored(&self) -> Result<Option<usize>> {
         let from = self.1;
         let curr_room = self.0.get(from).ok_or("Invalid room index")?;
 
         if curr_room.up == ExploreState::Unknown {
-            Ok(UP_INDEX)
+            Ok(Some(UP_INDEX))
         } else if curr_room.down == ExploreState::Unknown {
-            Ok(DOWN_INDEX)
+            Ok(Some(DOWN_INDEX))
         } else if curr_room.left == ExploreState::Unknown {
-            Ok(LEFT_INDEX)
+            Ok(Some(LEFT_INDEX))
         } else if curr_room.right == ExploreState::Unknown {
-            Ok(RIGHT_INDEX)
+            Ok(Some(RIGHT_INDEX))
         } else {
-            // bad code: this should be a proper type rather than usize
-            Ok(0)
+            Ok(None)
         }
     }
 
@@ -445,7 +444,10 @@ fn part1(input: &Vec<i64>) -> Result<usize> {
 
     let machine = IntCode::init(input, from_fn(|| {
         let next_dir = map_state_cell.borrow().next_unexplored().unwrap();
-        if next_dir == 0 {
+        if let Some(next_dir) = next_dir {
+            *last_move.borrow_mut() = next_dir;
+            Some(next_dir as i64)
+        } else {
             if breadcrumps.borrow().len() == 0 {
                 panic!("Could not find goal");
             } else {
@@ -454,9 +456,6 @@ fn part1(input: &Vec<i64>) -> Result<usize> {
                 println!("backtrackking: {}", last);
                 Some(last as i64)
             }
-        } else {
-            *last_move.borrow_mut() = next_dir;
-            Some(next_dir as i64)
         }
     }));
 
