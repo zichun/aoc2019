@@ -1,5 +1,6 @@
 use std::io::{self};
 use std::iter::from_fn;
+use std::iter::Extend;
 
 type Result<T> = ::std::result::Result<T, Box<dyn ::std::error::Error>>;
 
@@ -68,6 +69,23 @@ fn part1(input: &str, phases: usize) -> Result<String> {
     let output_string: String = output.into_iter().take(8).map(|x| std::char::from_digit(x as u32, 10).unwrap() ).collect();
 
     Ok(output_string.to_string())
+}
+
+fn parse_input_part2(input: &str) -> Vec<u8> {
+    let base_input: Vec<u32> = input.chars().filter_map(|x| x.to_digit(10)).collect();
+    let tr: Vec<u32> = Vec::new();
+    for i in 0..10000 {
+        tr.extend(base_input.iter());
+    }
+    tr.into_iter().map(|x| x as u8).collect()
+}
+
+fn part2(input: &str, phases: usize) -> Result<String> {
+    let new_input = parse_input_part2(input);
+
+    for i in 1..=phases {
+        
+    }
 }
 
 #[cfg(test)]
