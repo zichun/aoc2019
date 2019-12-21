@@ -305,13 +305,15 @@ fn main() -> Result<()> {
                     s.trim().parse().ok()
         ).collect();
 
-    println!("{}", part1(&input)?);
-//    println!("{}", part2(&input)?);
+    println!("Part1: {}", part1(&input)?);
+    println!("Part2: {}", part2(&input)?);
 
     Ok(())
 }
 
-fn part1(input: &Vec<i64>) -> Result<i64> {
+type MapType = Vec<Vec<char>>;
+
+fn parse_map(input: &Vec<i64>) -> MapType {
     let machine = IntCode::init(input, once(1));
     let output: Vec<i64> = machine.output_stream().collect();
     let map_string: String = output.iter().map(|x| (*x as u8) as char).collect();
@@ -328,6 +330,312 @@ fn part1(input: &Vec<i64>) -> Result<i64> {
         }
     });
 
+    map
+}
+
+fn path_to_string(path: &PathType) -> String {
+    let mut output = String::new();
+    for p in path {
+        if output.len() > 0 {
+            output = output + ",";
+        }
+        output = output + &p.0.to_string() + ",";
+        output = output + &p.1.to_string();
+    }
+    output
+}
+
+struct Coord(i16, i16);
+
+#[derive(Copy, Clone, Debug)]
+enum Direction {
+    Up, Down, Left, Right
+}
+
+#[derive(Clone, Debug)]
+enum Turn {
+    L(Direction),
+    R(Direction)
+}
+
+impl PartialEq for Turn {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Turn::L(a), Turn::L(b)) => true,
+            (Turn::R(a), Turn::R(b)) => true,
+            _ => false
+        }
+    }
+}
+
+impl Turn {
+    fn to_string(&self) -> String {
+        match self {
+            Turn::L(x) => "L".to_string(),
+            Turn::R(x) => "R".to_string()
+        }
+    }
+    fn dir(&self) -> Direction {
+        match self {
+            Turn::L(x) => *x,
+            Turn::R(x) => *x
+        }
+    }
+}
+
+impl Direction {
+    fn val(&self) -> Coord {
+        match self {
+            Direction::Up => Coord(-1, 0),
+            Direction::Down => Coord(1, 0),
+            Direction::Left => Coord(0, -1),
+            Direction::Right => Coord(0, 1),
+        }
+    }
+    fn turn(&self) -> (Turn, Turn) {
+        match self {
+            Direction::Up => (Turn::L(Direction::Left), Turn::R(Direction::Right)),
+            Direction::Down => (Turn::L(Direction::Right), Turn::R(Direction::Left)),
+            Direction::Left => (Turn::L(Direction::Down), Turn::R(Direction::Up)),
+            Direction::Right => (Turn::L(Direction::Up), Turn::R(Direction::Down))
+        }
+    }
+}
+
+fn has_route(map: &MapType, coord: &Coord) -> bool {
+    let total_row = map.len();
+    let total_col = map[0].len();
+
+    if coord.0 < 0 || coord.0 >= total_row as i16 ||
+        coord.1 < 0 || coord.1 >= total_col as i16
+    {
+        return false;
+    }
+
+    map[coord.0 as usize][coord.1 as usize] != '.'
+}
+
+fn move_in_dir(coord: &Coord, dir: &Direction) -> Coord {
+    let displacement = dir.val();
+    Coord(
+        coord.0 + displacement.0,
+        coord.1 + displacement.1
+    )
+}
+
+fn can_turn(map: &MapType, coord: &Coord, dir: &Direction) -> bool {
+    let new_coord = move_in_dir(coord, dir);
+    has_route(map, &new_coord)
+}
+
+type PathType = Vec<(Turn, usize)>;
+type PathSlice = [(Turn, usize)];
+
+fn feasible(path_slice: &PathSlice) -> bool {
+    let mut req_size = 0;
+    for p in path_slice {
+        req_size = req_size + if p.1 >= 10 {
+            2
+        } else {
+            1
+        };
+        req_size = req_size + 2;
+    }
+    req_size -= 1;
+
+    req_size <= 20
+}
+
+fn try_split_path(path: &PathType, part_a: &PathSlice, part_b: &PathSlice, part_c: &PathSlice) -> Option<Vec<char>> {
+    let mut start = 0;
+    let mut arrangement = Vec::new();
+
+    while start < path.len() {
+        if can_consume(path, part_a, start) {
+            start += part_a.len();
+            arrangement.push('A');
+        } else if can_consume(path, part_b, start) {
+            start += part_b.len();
+            arrangement.push('B');
+        } else if can_consume(path, part_c, start) {
+            start += part_c.len();
+            arrangement.push('C');
+        } else {
+            return None;
+        }
+    }
+
+    if arrangement.len() * 2 - 1 > 20 {
+        None
+    } else {
+        Some(arrangement)
+    }
+
+}
+
+fn can_consume(path: &PathType, part: &PathSlice, start_index: usize) -> bool {
+    if start_index + part.len() > path.len() {
+        return false;
+    }
+
+    for i in 0..part.len() {
+        if part[i] != path[i + start_index] {
+            return false;
+        }
+    }
+    return true;
+}
+
+fn break_path(path: &PathType) -> Option<(PathType, PathType, PathType, Vec<char>)> {
+    let mut split_0 = 0;
+    let mut split_1 = 0;
+
+    for i in 1..path.len() {
+        let part_a = path.get(0..i).unwrap();
+        if !feasible(part_a) {
+            break;
+        }
+
+        for j in (i + 1)..path.len() {
+            let part_b = path.get(i..j).unwrap();
+
+            if !feasible(part_b) {
+                break;
+            }
+
+            let mut k = j;
+            loop {
+                if can_consume(path, part_a, k) {
+                    k += part_a.len();
+                } else if can_consume(path, part_b, k) {
+                    k += part_b.len();
+                } else {
+                    break;
+                }
+            }
+
+            for l in k + 1..path.len() {
+                let part_c = path.get(k..l).unwrap();
+                if !feasible(part_c) {
+                    break;
+                }
+
+                let attempt = try_split_path(path, part_a, part_b, part_c);
+                match attempt {
+                    Some(arrangement) => {
+                        return Some(
+                            (part_a.to_vec(),
+                             part_b.to_vec(),
+                             part_c.to_vec(),
+                             arrangement)
+                        );
+                    }
+                    None => {
+                        continue;
+                    }
+                }
+            }
+        }
+    }
+
+    None
+}
+
+fn part2(input: &Vec<i64>) -> Result<i64> {
+    let map = parse_map(input);
+    let total_row = map.len();
+    let total_col = map[0].len();
+
+    let mut cur_row = total_row + 1;
+    let mut cur_col = 0;
+
+    for r in 0..total_row {
+        for c in 0..total_col {
+            if map[r][c] == '^' {
+                cur_row = r;
+                cur_col = c;
+                break;
+            }
+        }
+        if cur_row <= total_row {
+            break;
+        }
+    }
+    if cur_row == total_row + 1 {
+        return Err("Cannot find starting position!".into());
+    }
+
+    //
+    // Path exploration is greedy. This is exploiting nature of the
+    // graph in the input that will necessarily result in an euler
+    // walk.
+    //
+
+    let mut cur_dir = Direction::Up;
+    let mut cur_coord = Coord(cur_row as i16, cur_col as i16);
+    let mut path = Vec::new();
+
+    loop {
+        //
+        // Find next direction
+        //
+        let turns = cur_dir.turn();
+        let mut current_turn = Turn::L(Direction::Up);
+        if can_turn(&map, &cur_coord, &(turns.0).dir()) {
+            current_turn = turns.0;
+        } else if can_turn(&map, &cur_coord, &(turns.1).dir()) {
+            current_turn = turns.1;
+        } else {
+            // We are done!
+            break;
+        }
+
+        cur_dir = current_turn.dir();
+
+        //
+        // Move in direction
+        //
+        let mut move_count = 0;
+        loop {
+            let next_coord = move_in_dir(&cur_coord, &cur_dir);
+            if !has_route(&map, &next_coord) {
+                break;
+            } else {
+                move_count = move_count + 1;
+                cur_coord = next_coord;
+            }
+        }
+
+        path.push((current_turn, move_count));
+    }
+
+    let (path_a, path_b, path_c, arrangement) = break_path(&path).ok_or("cannot find path")?;
+    println!("{}", path_to_string(&path));
+    let mut output = String::new();
+    for a in arrangement {
+        if output.len() > 0 {
+            output = output + ",";
+        }
+        output = output + &a.to_string();
+    }
+    output = output + "\n";
+    output = output + &path_to_string(&path_a) + "\n";
+    output = output + &path_to_string(&path_b) + "\n";
+    output = output + &path_to_string(&path_c) + "\n";
+    output = output + "n\n";
+    println!("{}", output);
+
+    let mut hack = input.clone();
+    hack[0] = 2;
+    let input_stream = output.chars().map(|x| x as i64);
+
+    let machine = IntCode::init(&hack, input_stream);
+    let output = machine.output_stream();
+    Ok(output.last().ok_or("No output")?)
+}
+
+fn part1(input: &Vec<i64>) -> Result<i64> {
+    let map = parse_map(input);
     let total_row = map.len();
     let total_col = map[0].len();
 
