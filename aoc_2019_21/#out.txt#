@@ -1,0 +1,578 @@
+Part1: 19361850
+[false, false, false, false, false, false, false, false, false] false
+[true, false, false, false, false, false, false, false, false] false
+[false, true, false, false, false, false, false, false, false] false
+[true, true, false, false, false, false, false, false, false] false
+[false, false, true, false, false, false, false, false, false] false
+[true, false, true, false, false, false, false, false, false] false
+[false, true, true, false, false, false, false, false, false] false
+[true, true, true, false, false, false, false, false, false] false
+[false, false, false, true, false, false, false, false, false] true
+[true, false, false, true, false, false, false, false, false] false
+[false, true, false, true, false, false, false, false, false] true
+[true, true, false, true, false, false, false, false, false] false
+[false, false, true, true, false, false, false, false, false] true
+[true, false, true, true, false, false, false, false, false] false
+[false, true, true, true, false, false, false, false, false] true
+[true, true, true, true, false, false, false, false, false] false
+[false, false, false, false, true, false, false, false, false] false
+[true, false, false, false, true, false, false, false, false] false
+[false, true, false, false, true, false, false, false, false] false
+[true, true, false, false, true, false, false, false, false] false
+[false, false, true, false, true, false, false, false, false] false
+[true, false, true, false, true, false, false, false, false] false
+[false, true, true, false, true, false, false, false, false] false
+[true, true, true, false, true, false, false, false, false] false
+[false, false, false, true, true, false, false, false, false] true
+[true, false, false, true, true, false, false, false, false] true
+[false, true, false, true, true, false, false, false, false] true
+[true, true, false, true, true, false, false, false, false] true
+[false, false, true, true, true, false, false, false, false] true
+[true, false, true, true, true, false, false, false, false] true
+[false, true, true, true, true, false, false, false, false] true
+[true, true, true, true, true, false, false, false, false] true
+[false, false, false, false, false, true, false, false, false] false
+[true, false, false, false, false, true, false, false, false] false
+[false, true, false, false, false, true, false, false, false] false
+[true, true, false, false, false, true, false, false, false] false
+[false, false, true, false, false, true, false, false, false] false
+[true, false, true, false, false, true, false, false, false] false
+[false, true, true, false, false, true, false, false, false] false
+[true, true, true, false, false, true, false, false, false] false
+[false, false, false, true, false, true, false, false, false] true
+[true, false, false, true, false, true, false, false, false] false
+[false, true, false, true, false, true, false, false, false] true
+[true, true, false, true, false, true, false, false, false] false
+[false, false, true, true, false, true, false, false, false] true
+[true, false, true, true, false, true, false, false, false] false
+[false, true, true, true, false, true, false, false, false] true
+[true, true, true, true, false, true, false, false, false] false
+[false, false, false, false, true, true, false, false, false] false
+[true, false, false, false, true, true, false, false, false] false
+[false, true, false, false, true, true, false, false, false] false
+[true, true, false, false, true, true, false, false, false] false
+[false, false, true, false, true, true, false, false, false] false
+[true, false, true, false, true, true, false, false, false] false
+[false, true, true, false, true, true, false, false, false] false
+[true, true, true, false, true, true, false, false, false] false
+[false, false, false, true, true, true, false, false, false] true
+[true, false, false, true, true, true, false, false, false] true
+[false, true, false, true, true, true, false, false, false] true
+[true, true, false, true, true, true, false, false, false] true
+[false, false, true, true, true, true, false, false, false] true
+[true, false, true, true, true, true, false, false, false] true
+[false, true, true, true, true, true, false, false, false] true
+[true, true, true, true, true, true, false, false, false] true
+[false, false, false, false, false, false, true, false, false] false
+[true, false, false, false, false, false, true, false, false] false
+[false, true, false, false, false, false, true, false, false] false
+[true, true, false, false, false, false, true, false, false] false
+[false, false, true, false, false, false, true, false, false] false
+[true, false, true, false, false, false, true, false, false] false
+[false, true, true, false, false, false, true, false, false] false
+[true, true, true, false, false, false, true, false, false] false
+[false, false, false, true, false, false, true, false, false] true
+[true, false, false, true, false, false, true, false, false] false
+[false, true, false, true, false, false, true, false, false] true
+[true, true, false, true, false, false, true, false, false] false
+[false, false, true, true, false, false, true, false, false] true
+[true, false, true, true, false, false, true, false, false] false
+[false, true, true, true, false, false, true, false, false] true
+[true, true, true, true, false, false, true, false, false] false
+[false, false, false, false, true, false, true, false, false] false
+[true, false, false, false, true, false, true, false, false] false
+[false, true, false, false, true, false, true, false, false] false
+[true, true, false, false, true, false, true, false, false] false
+[false, false, true, false, true, false, true, false, false] false
+[true, false, true, false, true, false, true, false, false] false
+[false, true, true, false, true, false, true, false, false] false
+[true, true, true, false, true, false, true, false, false] false
+[false, false, false, true, true, false, true, false, false] true
+[true, false, false, true, true, false, true, false, false] true
+[false, true, false, true, true, false, true, false, false] true
+[true, true, false, true, true, false, true, false, false] true
+[false, false, true, true, true, false, true, false, false] true
+[true, false, true, true, true, false, true, false, false] true
+[false, true, true, true, true, false, true, false, false] true
+[true, true, true, true, true, false, true, false, false] true
+[false, false, false, false, false, true, true, false, false] false
+[true, false, false, false, false, true, true, false, false] false
+[false, true, false, false, false, true, true, false, false] false
+[true, true, false, false, false, true, true, false, false] false
+[false, false, true, false, false, true, true, false, false] false
+[true, false, true, false, false, true, true, false, false] false
+[false, true, true, false, false, true, true, false, false] false
+[true, true, true, false, false, true, true, false, false] false
+[false, false, false, true, false, true, true, false, false] true
+[true, false, false, true, false, true, true, false, false] false
+[false, true, false, true, false, true, true, false, false] true
+[true, true, false, true, false, true, true, false, false] false
+[false, false, true, true, false, true, true, false, false] true
+[true, false, true, true, false, true, true, false, false] false
+[false, true, true, true, false, true, true, false, false] true
+[true, true, true, true, false, true, true, false, false] false
+[false, false, false, false, true, true, true, false, false] false
+[true, false, false, false, true, true, true, false, false] false
+[false, true, false, false, true, true, true, false, false] false
+[true, true, false, false, true, true, true, false, false] false
+[false, false, true, false, true, true, true, false, false] false
+[true, false, true, false, true, true, true, false, false] false
+[false, true, true, false, true, true, true, false, false] false
+[true, true, true, false, true, true, true, false, false] false
+[false, false, false, true, true, true, true, false, false] true
+[true, false, false, true, true, true, true, false, false] true
+[false, true, false, true, true, true, true, false, false] true
+[true, true, false, true, true, true, true, false, false] true
+[false, false, true, true, true, true, true, false, false] true
+[true, false, true, true, true, true, true, false, false] true
+[false, true, true, true, true, true, true, false, false] true
+[true, true, true, true, true, true, true, false, false] true
+[false, false, false, false, false, false, false, true, false] false
+[true, false, false, false, false, false, false, true, false] false
+[false, true, false, false, false, false, false, true, false] false
+[true, true, false, false, false, false, false, true, false] false
+[false, false, true, false, false, false, false, true, false] false
+[true, false, true, false, false, false, false, true, false] false
+[false, true, true, false, false, false, false, true, false] false
+[true, true, true, false, false, false, false, true, false] false
+[false, false, false, true, false, false, false, true, false] true
+[true, false, false, true, false, false, false, true, false] true
+[false, true, false, true, false, false, false, true, false] true
+[true, true, false, true, false, false, false, true, false] true
+[false, false, true, true, false, false, false, true, false] true
+[true, false, true, true, false, false, false, true, false] true
+[false, true, true, true, false, false, false, true, false] true
+[true, true, true, true, false, false, false, true, false] true
+[false, false, false, false, true, false, false, true, false] false
+[true, false, false, false, true, false, false, true, false] false
+[false, true, false, false, true, false, false, true, false] false
+[true, true, false, false, true, false, false, true, false] false
+[false, false, true, false, true, false, false, true, false] false
+[true, false, true, false, true, false, false, true, false] false
+[false, true, true, false, true, false, false, true, false] false
+[true, true, true, false, true, false, false, true, false] false
+[false, false, false, true, true, false, false, true, false] true
+[true, false, false, true, true, false, false, true, false] true
+[false, true, false, true, true, false, false, true, false] true
+[true, true, false, true, true, false, false, true, false] true
+[false, false, true, true, true, false, false, true, false] true
+[true, false, true, true, true, false, false, true, false] true
+[false, true, true, true, true, false, false, true, false] true
+[true, true, true, true, true, false, false, true, false] true
+[false, false, false, false, false, true, false, true, false] false
+[true, false, false, false, false, true, false, true, false] false
+[false, true, false, false, false, true, false, true, false] false
+[true, true, false, false, false, true, false, true, false] false
+[false, false, true, false, false, true, false, true, false] false
+[true, false, true, false, false, true, false, true, false] false
+[false, true, true, false, false, true, false, true, false] false
+[true, true, true, false, false, true, false, true, false] false
+[false, false, false, true, false, true, false, true, false] true
+[true, false, false, true, false, true, false, true, false] true
+[false, true, false, true, false, true, false, true, false] true
+[true, true, false, true, false, true, false, true, false] true
+[false, false, true, true, false, true, false, true, false] true
+[true, false, true, true, false, true, false, true, false] true
+[false, true, true, true, false, true, false, true, false] true
+[true, true, true, true, false, true, false, true, false] true
+[false, false, false, false, true, true, false, true, false] false
+[true, false, false, false, true, true, false, true, false] false
+[false, true, false, false, true, true, false, true, false] false
+[true, true, false, false, true, true, false, true, false] false
+[false, false, true, false, true, true, false, true, false] false
+[true, false, true, false, true, true, false, true, false] false
+[false, true, true, false, true, true, false, true, false] false
+[true, true, true, false, true, true, false, true, false] false
+[false, false, false, true, true, true, false, true, false] true
+[true, false, false, true, true, true, false, true, false] true
+[false, true, false, true, true, true, false, true, false] true
+[true, true, false, true, true, true, false, true, false] true
+[false, false, true, true, true, true, false, true, false] true
+[true, false, true, true, true, true, false, true, false] true
+[false, true, true, true, true, true, false, true, false] true
+[true, true, true, true, true, true, false, true, false] true
+[false, false, false, false, false, false, true, true, false] false
+[true, false, false, false, false, false, true, true, false] false
+[false, true, false, false, false, false, true, true, false] false
+[true, true, false, false, false, false, true, true, false] false
+[false, false, true, false, false, false, true, true, false] false
+[true, false, true, false, false, false, true, true, false] false
+[false, true, true, false, false, false, true, true, false] false
+[true, true, true, false, false, false, true, true, false] false
+[false, false, false, true, false, false, true, true, false] true
+[true, false, false, true, false, false, true, true, false] true
+[false, true, false, true, false, false, true, true, false] true
+[true, true, false, true, false, false, true, true, false] true
+[false, false, true, true, false, false, true, true, false] true
+[true, false, true, true, false, false, true, true, false] true
+[false, true, true, true, false, false, true, true, false] true
+[true, true, true, true, false, false, true, true, false] true
+[false, false, false, false, true, false, true, true, false] false
+[true, false, false, false, true, false, true, true, false] false
+[false, true, false, false, true, false, true, true, false] false
+[true, true, false, false, true, false, true, true, false] false
+[false, false, true, false, true, false, true, true, false] false
+[true, false, true, false, true, false, true, true, false] false
+[false, true, true, false, true, false, true, true, false] false
+[true, true, true, false, true, false, true, true, false] false
+[false, false, false, true, true, false, true, true, false] true
+[true, false, false, true, true, false, true, true, false] true
+[false, true, false, true, true, false, true, true, false] true
+[true, true, false, true, true, false, true, true, false] true
+[false, false, true, true, true, false, true, true, false] true
+[true, false, true, true, true, false, true, true, false] true
+[false, true, true, true, true, false, true, true, false] true
+[true, true, true, true, true, false, true, true, false] true
+[false, false, false, false, false, true, true, true, false] false
+[true, false, false, false, false, true, true, true, false] false
+[false, true, false, false, false, true, true, true, false] false
+[true, true, false, false, false, true, true, true, false] false
+[false, false, true, false, false, true, true, true, false] false
+[true, false, true, false, false, true, true, true, false] false
+[false, true, true, false, false, true, true, true, false] false
+[true, true, true, false, false, true, true, true, false] false
+[false, false, false, true, false, true, true, true, false] true
+[true, false, false, true, false, true, true, true, false] true
+[false, true, false, true, false, true, true, true, false] true
+[true, true, false, true, false, true, true, true, false] true
+[false, false, true, true, false, true, true, true, false] true
+[true, false, true, true, false, true, true, true, false] true
+[false, true, true, true, false, true, true, true, false] true
+[true, true, true, true, false, true, true, true, false] true
+[false, false, false, false, true, true, true, true, false] false
+[true, false, false, false, true, true, true, true, false] false
+[false, true, false, false, true, true, true, true, false] false
+[true, true, false, false, true, true, true, true, false] false
+[false, false, true, false, true, true, true, true, false] false
+[true, false, true, false, true, true, true, true, false] false
+[false, true, true, false, true, true, true, true, false] false
+[true, true, true, false, true, true, true, true, false] false
+[false, false, false, true, true, true, true, true, false] true
+[true, false, false, true, true, true, true, true, false] true
+[false, true, false, true, true, true, true, true, false] true
+[true, true, false, true, true, true, true, true, false] true
+[false, false, true, true, true, true, true, true, false] true
+[true, false, true, true, true, true, true, true, false] true
+[false, true, true, true, true, true, true, true, false] true
+[true, true, true, true, true, true, true, true, false] true
+[false, false, false, false, false, false, false, false, true] false
+[true, false, false, false, false, false, false, false, true] false
+[false, true, false, false, false, false, false, false, true] false
+[true, true, false, false, false, false, false, false, true] false
+[false, false, true, false, false, false, false, false, true] false
+[true, false, true, false, false, false, false, false, true] false
+[false, true, true, false, false, false, false, false, true] false
+[true, true, true, false, false, false, false, false, true] false
+[false, false, false, true, false, false, false, false, true] true
+[true, false, false, true, false, false, false, false, true] false
+[false, true, false, true, false, false, false, false, true] true
+[true, true, false, true, false, false, false, false, true] false
+[false, false, true, true, false, false, false, false, true] true
+[true, false, true, true, false, false, false, false, true] false
+[false, true, true, true, false, false, false, false, true] true
+[true, true, true, true, false, false, false, false, true] false
+[false, false, false, false, true, false, false, false, true] false
+[true, false, false, false, true, false, false, false, true] false
+[false, true, false, false, true, false, false, false, true] false
+[true, true, false, false, true, false, false, false, true] false
+[false, false, true, false, true, false, false, false, true] false
+[true, false, true, false, true, false, false, false, true] false
+[false, true, true, false, true, false, false, false, true] false
+[true, true, true, false, true, false, false, false, true] false
+[false, false, false, true, true, false, false, false, true] true
+[true, false, false, true, true, false, false, false, true] true
+[false, true, false, true, true, false, false, false, true] true
+[true, true, false, true, true, false, false, false, true] true
+[false, false, true, true, true, false, false, false, true] true
+[true, false, true, true, true, false, false, false, true] true
+[false, true, true, true, true, false, false, false, true] true
+[true, true, true, true, true, false, false, false, true] true
+[false, false, false, false, false, true, false, false, true] false
+[true, false, false, false, false, true, false, false, true] false
+[false, true, false, false, false, true, false, false, true] false
+[true, true, false, false, false, true, false, false, true] false
+[false, false, true, false, false, true, false, false, true] false
+[true, false, true, false, false, true, false, false, true] false
+[false, true, true, false, false, true, false, false, true] false
+[true, true, true, false, false, true, false, false, true] false
+[false, false, false, true, false, true, false, false, true] true
+[true, false, false, true, false, true, false, false, true] false
+[false, true, false, true, false, true, false, false, true] true
+[true, true, false, true, false, true, false, false, true] false
+[false, false, true, true, false, true, false, false, true] true
+[true, false, true, true, false, true, false, false, true] false
+[false, true, true, true, false, true, false, false, true] true
+[true, true, true, true, false, true, false, false, true] false
+[false, false, false, false, true, true, false, false, true] false
+[true, false, false, false, true, true, false, false, true] false
+[false, true, false, false, true, true, false, false, true] false
+[true, true, false, false, true, true, false, false, true] false
+[false, false, true, false, true, true, false, false, true] false
+[true, false, true, false, true, true, false, false, true] false
+[false, true, true, false, true, true, false, false, true] false
+[true, true, true, false, true, true, false, false, true] false
+[false, false, false, true, true, true, false, false, true] true
+[true, false, false, true, true, true, false, false, true] true
+[false, true, false, true, true, true, false, false, true] true
+[true, true, false, true, true, true, false, false, true] true
+[false, false, true, true, true, true, false, false, true] true
+[true, false, true, true, true, true, false, false, true] true
+[false, true, true, true, true, true, false, false, true] true
+[true, true, true, true, true, true, false, false, true] true
+[false, false, false, false, false, false, true, false, true] false
+[true, false, false, false, false, false, true, false, true] false
+[false, true, false, false, false, false, true, false, true] false
+[true, true, false, false, false, false, true, false, true] false
+[false, false, true, false, false, false, true, false, true] false
+[true, false, true, false, false, false, true, false, true] false
+[false, true, true, false, false, false, true, false, true] false
+[true, true, true, false, false, false, true, false, true] false
+[false, false, false, true, false, false, true, false, true] true
+[true, false, false, true, false, false, true, false, true] false
+[false, true, false, true, false, false, true, false, true] true
+[true, true, false, true, false, false, true, false, true] false
+[false, false, true, true, false, false, true, false, true] true
+[true, false, true, true, false, false, true, false, true] false
+[false, true, true, true, false, false, true, false, true] true
+[true, true, true, true, false, false, true, false, true] false
+[false, false, false, false, true, false, true, false, true] false
+[true, false, false, false, true, false, true, false, true] false
+[false, true, false, false, true, false, true, false, true] false
+[true, true, false, false, true, false, true, false, true] false
+[false, false, true, false, true, false, true, false, true] false
+[true, false, true, false, true, false, true, false, true] false
+[false, true, true, false, true, false, true, false, true] false
+[true, true, true, false, true, false, true, false, true] false
+[false, false, false, true, true, false, true, false, true] true
+[true, false, false, true, true, false, true, false, true] true
+[false, true, false, true, true, false, true, false, true] true
+[true, true, false, true, true, false, true, false, true] true
+[false, false, true, true, true, false, true, false, true] true
+[true, false, true, true, true, false, true, false, true] true
+[false, true, true, true, true, false, true, false, true] true
+[true, true, true, true, true, false, true, false, true] true
+[false, false, false, false, false, true, true, false, true] false
+[true, false, false, false, false, true, true, false, true] false
+[false, true, false, false, false, true, true, false, true] false
+[true, true, false, false, false, true, true, false, true] false
+[false, false, true, false, false, true, true, false, true] false
+[true, false, true, false, false, true, true, false, true] false
+[false, true, true, false, false, true, true, false, true] false
+[true, true, true, false, false, true, true, false, true] false
+[false, false, false, true, false, true, true, false, true] true
+[true, false, false, true, false, true, true, false, true] false
+[false, true, false, true, false, true, true, false, true] true
+[true, true, false, true, false, true, true, false, true] false
+[false, false, true, true, false, true, true, false, true] true
+[true, false, true, true, false, true, true, false, true] false
+[false, true, true, true, false, true, true, false, true] true
+[true, true, true, true, false, true, true, false, true] false
+[false, false, false, false, true, true, true, false, true] false
+[true, false, false, false, true, true, true, false, true] false
+[false, true, false, false, true, true, true, false, true] false
+[true, true, false, false, true, true, true, false, true] false
+[false, false, true, false, true, true, true, false, true] false
+[true, false, true, false, true, true, true, false, true] false
+[false, true, true, false, true, true, true, false, true] false
+[true, true, true, false, true, true, true, false, true] false
+[false, false, false, true, true, true, true, false, true] true
+[true, false, false, true, true, true, true, false, true] true
+[false, true, false, true, true, true, true, false, true] true
+[true, true, false, true, true, true, true, false, true] true
+[false, false, true, true, true, true, true, false, true] true
+[true, false, true, true, true, true, true, false, true] true
+[false, true, true, true, true, true, true, false, true] true
+[true, true, true, true, true, true, true, false, true] true
+[false, false, false, false, false, false, false, true, true] false
+[true, false, false, false, false, false, false, true, true] false
+[false, true, false, false, false, false, false, true, true] false
+[true, true, false, false, false, false, false, true, true] false
+[false, false, true, false, false, false, false, true, true] false
+[true, false, true, false, false, false, false, true, true] false
+[false, true, true, false, false, false, false, true, true] false
+[true, true, true, false, false, false, false, true, true] false
+[false, false, false, true, false, false, false, true, true] true
+[true, false, false, true, false, false, false, true, true] true
+[false, true, false, true, false, false, false, true, true] true
+[true, true, false, true, false, false, false, true, true] true
+[false, false, true, true, false, false, false, true, true] true
+[true, false, true, true, false, false, false, true, true] true
+[false, true, true, true, false, false, false, true, true] true
+[true, true, true, true, false, false, false, true, true] true
+[false, false, false, false, true, false, false, true, true] false
+[true, false, false, false, true, false, false, true, true] false
+[false, true, false, false, true, false, false, true, true] false
+[true, true, false, false, true, false, false, true, true] false
+[false, false, true, false, true, false, false, true, true] false
+[true, false, true, false, true, false, false, true, true] false
+[false, true, true, false, true, false, false, true, true] false
+[true, true, true, false, true, false, false, true, true] false
+[false, false, false, true, true, false, false, true, true] true
+[true, false, false, true, true, false, false, true, true] true
+[false, true, false, true, true, false, false, true, true] true
+[true, true, false, true, true, false, false, true, true] true
+[false, false, true, true, true, false, false, true, true] true
+[true, false, true, true, true, false, false, true, true] true
+[false, true, true, true, true, false, false, true, true] true
+[true, true, true, true, true, false, false, true, true] true
+[false, false, false, false, false, true, false, true, true] false
+[true, false, false, false, false, true, false, true, true] false
+[false, true, false, false, false, true, false, true, true] false
+[true, true, false, false, false, true, false, true, true] false
+[false, false, true, false, false, true, false, true, true] false
+[true, false, true, false, false, true, false, true, true] false
+[false, true, true, false, false, true, false, true, true] false
+[true, true, true, false, false, true, false, true, true] false
+[false, false, false, true, false, true, false, true, true] true
+[true, false, false, true, false, true, false, true, true] true
+[false, true, false, true, false, true, false, true, true] true
+[true, true, false, true, false, true, false, true, true] true
+[false, false, true, true, false, true, false, true, true] true
+[true, false, true, true, false, true, false, true, true] true
+[false, true, true, true, false, true, false, true, true] true
+[true, true, true, true, false, true, false, true, true] true
+[false, false, false, false, true, true, false, true, true] false
+[true, false, false, false, true, true, false, true, true] false
+[false, true, false, false, true, true, false, true, true] false
+[true, true, false, false, true, true, false, true, true] false
+[false, false, true, false, true, true, false, true, true] false
+[true, false, true, false, true, true, false, true, true] false
+[false, true, true, false, true, true, false, true, true] false
+[true, true, true, false, true, true, false, true, true] false
+[false, false, false, true, true, true, false, true, true] true
+[true, false, false, true, true, true, false, true, true] true
+[false, true, false, true, true, true, false, true, true] true
+[true, true, false, true, true, true, false, true, true] true
+[false, false, true, true, true, true, false, true, true] true
+[true, false, true, true, true, true, false, true, true] true
+[false, true, true, true, true, true, false, true, true] true
+[true, true, true, true, true, true, false, true, true] true
+[false, false, false, false, false, false, true, true, true] false
+[true, false, false, false, false, false, true, true, true] false
+[false, true, false, false, false, false, true, true, true] false
+[true, true, false, false, false, false, true, true, true] false
+[false, false, true, false, false, false, true, true, true] false
+[true, false, true, false, false, false, true, true, true] false
+[false, true, true, false, false, false, true, true, true] false
+[true, true, true, false, false, false, true, true, true] false
+[false, false, false, true, false, false, true, true, true] true
+[true, false, false, true, false, false, true, true, true] true
+[false, true, false, true, false, false, true, true, true] true
+[true, true, false, true, false, false, true, true, true] true
+[false, false, true, true, false, false, true, true, true] true
+[true, false, true, true, false, false, true, true, true] true
+[false, true, true, true, false, false, true, true, true] true
+[true, true, true, true, false, false, true, true, true] true
+[false, false, false, false, true, false, true, true, true] false
+[true, false, false, false, true, false, true, true, true] false
+[false, true, false, false, true, false, true, true, true] false
+[true, true, false, false, true, false, true, true, true] false
+[false, false, true, false, true, false, true, true, true] false
+[true, false, true, false, true, false, true, true, true] false
+[false, true, true, false, true, false, true, true, true] false
+[true, true, true, false, true, false, true, true, true] false
+[false, false, false, true, true, false, true, true, true] true
+[true, false, false, true, true, false, true, true, true] true
+[false, true, false, true, true, false, true, true, true] true
+[true, true, false, true, true, false, true, true, true] true
+[false, false, true, true, true, false, true, true, true] true
+[true, false, true, true, true, false, true, true, true] true
+[false, true, true, true, true, false, true, true, true] true
+[true, true, true, true, true, false, true, true, true] true
+[false, false, false, false, false, true, true, true, true] false
+[true, false, false, false, false, true, true, true, true] false
+[false, true, false, false, false, true, true, true, true] false
+[true, true, false, false, false, true, true, true, true] false
+[false, false, true, false, false, true, true, true, true] false
+[true, false, true, false, false, true, true, true, true] false
+[false, true, true, false, false, true, true, true, true] false
+[true, true, true, false, false, true, true, true, true] false
+[false, false, false, true, false, true, true, true, true] true
+[true, false, false, true, false, true, true, true, true] true
+[false, true, false, true, false, true, true, true, true] true
+[true, true, false, true, false, true, true, true, true] true
+[false, false, true, true, false, true, true, true, true] true
+[true, false, true, true, false, true, true, true, true] true
+[false, true, true, true, false, true, true, true, true] true
+[true, true, true, true, false, true, true, true, true] true
+[false, false, false, false, true, true, true, true, true] false
+[true, false, false, false, true, true, true, true, true] false
+[false, true, false, false, true, true, true, true, true] false
+[true, true, false, false, true, true, true, true, true] false
+[false, false, true, false, true, true, true, true, true] false
+[true, false, true, false, true, true, true, true, true] false
+[false, true, true, false, true, true, true, true, true] false
+[true, true, true, false, true, true, true, true, true] false
+[false, false, false, true, true, true, true, true, true] true
+[true, false, false, true, true, true, true, true, true] true
+[false, true, false, true, true, true, true, true, true] true
+[true, true, false, true, true, true, true, true, true] true
+[false, false, true, true, true, true, true, true, true] true
+[true, false, true, true, true, true, true, true, true] true
+[false, true, true, true, true, true, true, true, true] true
+[true, true, true, true, true, true, true, true, true] true
+MinTerms([24, 25, 26, 27, 28, 29, 30, 31, 56, 57, 58, 59, 60, 61, 62, 63, 88, 89, 90, 91, 92, 93, 94, 95, 120, 121, 122, 123, 124, 125, 126, 127, 152, 153, 154, 155, 156, 157, 158, 159, 184, 185, 186, 187, 188, 189, 190, 191, 216, 217, 218, 219, 220, 221, 222, 223, 248, 249, 250, 251, 252, 253, 254, 255, 280, 281, 282, 283, 284, 285, 286, 287, 312, 313, 314, 315, 316, 317, 318, 319, 344, 345, 346, 347, 348, 349, 350, 351, 376, 377, 378, 379, 380, 381, 382, 383, 408, 409, 410, 411, 412, 413, 414, 415, 440, 441, 442, 443, 444, 445, 446, 447, 472, 473, 474, 475, 476, 477, 478, 479, 504, 505, 506, 507, 508, 509, 510, 511]) Complements([WildCard, WildCard, WildCard, True, True, WildCard, WildCard, WildCard, WildCard])
+DE
+MinTerms([8, 10, 12, 14, 24, 26, 28, 30, 40, 42, 44, 46, 56, 58, 60, 62, 72, 74, 76, 78, 88, 90, 92, 94, 104, 106, 108, 110, 120, 122, 124, 126, 136, 138, 140, 142, 152, 154, 156, 158, 168, 170, 172, 174, 184, 186, 188, 190, 200, 202, 204, 206, 216, 218, 220, 222, 232, 234, 236, 238, 248, 250, 252, 254, 264, 266, 268, 270, 280, 282, 284, 286, 296, 298, 300, 302, 312, 314, 316, 318, 328, 330, 332, 334, 344, 346, 348, 350, 360, 362, 364, 366, 376, 378, 380, 382, 392, 394, 396, 398, 408, 410, 412, 414, 424, 426, 428, 430, 440, 442, 444, 446, 456, 458, 460, 462, 472, 474, 476, 478, 488, 490, 492, 494, 504, 506, 508, 510]) Complements([False, WildCard, WildCard, True, WildCard, WildCard, WildCard, WildCard, WildCard])
+A'D
+MinTerms([136, 137, 138, 139, 140, 141, 142, 143, 152, 153, 154, 155, 156, 157, 158, 159, 168, 169, 170, 171, 172, 173, 174, 175, 184, 185, 186, 187, 188, 189, 190, 191, 200, 201, 202, 203, 204, 205, 206, 207, 216, 217, 218, 219, 220, 221, 222, 223, 232, 233, 234, 235, 236, 237, 238, 239, 248, 249, 250, 251, 252, 253, 254, 255, 392, 393, 394, 395, 396, 397, 398, 399, 408, 409, 410, 411, 412, 413, 414, 415, 424, 425, 426, 427, 428, 429, 430, 431, 440, 441, 442, 443, 444, 445, 446, 447, 456, 457, 458, 459, 460, 461, 462, 463, 472, 473, 474, 475, 476, 477, 478, 479, 488, 489, 490, 491, 492, 493, 494, 495, 504, 505, 506, 507, 508, 509, 510, 511]) Complements([WildCard, WildCard, WildCard, True, WildCard, WildCard, WildCard, True, WildCard])
+DH
+Input instructions:
+
+Running...
+
+
+Didn't make it across:
+
+.................
+.................
+@................
+#####.###.#..####
+ ABCDEFGHJI
+.................
+.@...............
+.................
+#####.###.#..####
+
+..@..............
+.................
+.................
+#####.###.#..####
+
+.................
+...@.............
+.................
+#####.###.#..####
+
+.................
+.................
+....@............
+#####.###.#..####
+
+.................
+.....@...........
+.................
+#####.###.#..####
+
+......@..........
+.................
+.................
+#####.###.#..####
+
+.................
+.......@.........
+.................
+#####.###.#..####
+
+.................
+.................
+........@........
+#####.###.#..####
+
+.................
+.................
+.................
+#####.###@#..####
+
+
+Part2: 1
