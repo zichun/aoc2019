@@ -419,7 +419,7 @@ fn part1(input: &Vec<i64>) -> Result<i64> {
                 break;
             }
 //        }
-        thread::sleep(Duration::from_millis(50));
+//        thread::sleep(Duration::from_millis(50));
     }
 
     for h in handles {
