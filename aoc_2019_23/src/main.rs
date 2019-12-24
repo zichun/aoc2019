@@ -356,7 +356,7 @@ fn part1(input: &Vec<i64>) -> Result<i64> {
                 //
                 // run_to_next_output_or_maybe_not
                 //
-                const TICKS_TO_RUN: usize = 50;
+                const TICKS_TO_RUN: usize = 10;
                 let mut tick = 0;
                 while machine.output_buffer.len() == 0 && machine.is_terminated == false {
                     machine.run_tick().unwrap();
@@ -397,7 +397,7 @@ fn part1(input: &Vec<i64>) -> Result<i64> {
                         }
                     }
                 }
-                thread::sleep(Duration::from_millis(50));
+                thread::yield_now();
             }
         });
 
@@ -407,19 +407,17 @@ fn part1(input: &Vec<i64>) -> Result<i64> {
     let mut ans = 0;
     loop {
         let message = out_rx.recv().unwrap();
-//        if let Ok(message) = receive {
-            println!("main thread received message from {} to {}", message.from, message.dest);
-            if message.dest < MACHINES {
-                in_txs[message.dest].send(Packet::Message(message)).unwrap();
-            } else {
-                ans = message.y;
-                for i in 0..MACHINES {
-                    in_txs[i].send(Packet::Term).unwrap();
-                }
-                break;
+        println!("main thread received message from {} to {}", message.from, message.dest);
+        if message.dest < MACHINES {
+            in_txs[message.dest].send(Packet::Message(message)).unwrap();
+        } else {
+            ans = message.y;
+            for i in 0..MACHINES {
+                in_txs[i].send(Packet::Term).unwrap();
             }
-//        }
-//        thread::sleep(Duration::from_millis(50));
+            break;
+        }
+        thread::yield_now();
     }
 
     for h in handles {
