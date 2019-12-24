@@ -4,7 +4,7 @@ use std::iter::*;
 use std::cell::RefCell;
 use std::thread;
 use std::sync::mpsc;
-use std::time::Duration;
+use std::time::Instant;
 
 type Result<T> = ::std::result::Result<T, Box<dyn ::std::error::Error>>;
 
@@ -307,7 +307,7 @@ fn main() -> Result<()> {
                     s.trim().parse().ok()
         ).collect();
 
-    println!("{}", part1(&input)?);
+//    println!("{}", part1(&input)?);
     println!("{}", part2(&input)?);
 
     Ok(())
@@ -327,7 +327,6 @@ enum Packet {
 
 fn part1(input: &Vec<i64>) -> Result<i64> {
     const MACHINES: usize = 50;
-    //let (tx, rx) = mpsc::channel();
     let mut handles = Vec::new();
     let (out_tx, out_rx) = mpsc::channel();
 
@@ -426,6 +425,128 @@ fn part1(input: &Vec<i64>) -> Result<i64> {
 
     Ok(ans)
 }
+
 fn part2(input: &Vec<i64>) -> Result<i64> {
-    Ok(0)
+    const MACHINES: usize = 50;
+    let mut handles = Vec::new();
+    let (out_tx, out_rx) = mpsc::channel();
+
+    let mut in_txs = Vec::new();
+
+    for i in 0..MACHINES {
+        let input = input.clone();
+        let out_tx = mpsc::Sender::clone(&out_tx);
+        let (in_tx, in_rx) = mpsc::channel();
+        in_txs.push(in_tx);
+
+        let h = thread::spawn(move || {
+            let input_buffer = RefCell::new(VecDeque::new());
+
+            let mut machine = IntCode::init(&input,
+                                            once(i as i64).chain(
+                                                from_fn(|| {
+                                                    if input_buffer.borrow().len() == 0 {
+                                                        Some(-1)
+                                                    } else {
+                                                        let message = input_buffer.borrow_mut().pop_front().unwrap();
+                                                        Some(message)
+                                                    }
+                                                })));
+            loop {
+                //
+                // run_to_next_output_or_maybe_not
+                //
+                const TICKS_TO_RUN: usize = 10;
+                let mut tick = 0;
+                while machine.output_buffer.len() == 0 && machine.is_terminated == false {
+                    machine.run_tick().unwrap();
+                    tick = tick + 1;
+                    if tick >= TICKS_TO_RUN {
+                        break;
+                    }
+                }
+
+                if machine.output_buffer.len() > 0 {
+                    let dest = machine.run_to_next_output(3).unwrap() as usize;
+                    let x = machine.output_buffer.pop_front().unwrap();
+                    let y = machine.output_buffer.pop_front().unwrap();
+                    println!("machine {} sending message {},{} to {}", i, x, y, dest);
+                    out_tx.send(PacketMessage {
+                        from: i,
+                        dest: dest,
+                        x: x,
+                        y: y
+                    }).unwrap();
+                }
+
+                //
+                // check input stream
+                //
+                let receive = in_rx.try_recv();
+                if let Ok(message) = receive {
+                    match message {
+                        Packet::Message(message) => {
+                            println!("machine {} received message {},{} from {}", message.dest, message.x, message.y, message.from);
+                            assert_eq!(message.dest, i);
+                            input_buffer.borrow_mut().push_back(message.x);
+                            input_buffer.borrow_mut().push_back(message.y);
+                        },
+                        Packet::Term => {
+                            println!("Terminating machine {}", i);
+                            break;
+                        }
+                    }
+                }
+                thread::yield_now();
+            }
+        });
+
+        handles.push(h);
+    }
+
+    let mut ans = 0;
+    let mut nat_x = 0;
+    let mut nat_y = 0;
+    let mut prev_y = 0;
+    let mut last_message = Instant::now();
+
+    loop {
+        let packet = out_rx.try_recv();
+        if let Ok(message) = packet {
+            println!("main thread received message from {} to {}", message.from, message.dest);
+            last_message = Instant::now();
+            if message.dest < MACHINES {
+                in_txs[message.dest].send(Packet::Message(message)).unwrap();
+            } else {
+                nat_x = message.x;
+                nat_y = message.y;
+            }
+        }
+
+        if last_message.elapsed().as_secs() > 2 {
+            last_message = Instant::now();
+
+            if prev_y == nat_y {
+                ans = nat_y;
+                for i in 0..MACHINES {
+                    in_txs[i].send(Packet::Term).unwrap();
+                }
+                break;
+            }
+            prev_y = nat_y;
+            in_txs[0].send(Packet::Message(PacketMessage {
+                from: 255,
+                dest: 0,
+                x: nat_x,
+                y: nat_y
+            }));
+        }
+        thread::yield_now();
+    }
+
+    for h in handles {
+        h.join().unwrap();
+    }
+
+    Ok(ans)
 }
