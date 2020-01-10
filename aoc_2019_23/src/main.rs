@@ -307,8 +307,8 @@ fn main() -> Result<()> {
                     s.trim().parse().ok()
         ).collect();
 
-//    println!("{}", part1(&input)?);
-    println!("{}", part2(&input)?);
+    println!("{}", part1(&input)?);
+//    println!("{}", part2(&input)?);
 
     Ok(())
 }

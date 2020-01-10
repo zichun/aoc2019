@@ -335,35 +335,86 @@ fn splice(holes: &Vec<bool>, start: usize) -> Vec<bool> {
     tr
 }
 
-fn should_jump(holes: &Vec<bool>) -> (bool, usize) {
-    if holes.len() == 0 {
-        return (false, 1);
+fn should_jump(holes: &Vec<bool>) -> bool {
+    let x = should_jump_sim(holes);
+    x.2
+}
+
+fn should_jump_sim(holes: &Vec<bool>) -> (usize, usize, bool) {
+    if holes.len() == 0
+    {
+        return (0, 0, false);
     }
 
     let mut can_walk = true;
     let mut can_jump = true;
-    if holes[0] == false {
+    if holes[0] == false
+    {
         can_walk = false;
     }
-    if holes.len() < 4 || holes[3] == false {
+
+    if holes.len() < 4 || holes[3] == false
+    {
         can_jump = false;
     }
 
-    let mut jump = 0;
-    let mut walk = 0;
-
-    if can_walk {
+    let mut walk_res = None;
+    if can_walk
+    {
         let new_hole = splice(holes, 1);
-        let x = should_jump(&new_hole);
-        walk = x.1;
-    }
-    if can_jump {
-        let new_hole = splice(holes, 4);
-        let x = should_jump(&new_hole);
-        jump = x.1;
+        walk_res = Some(should_jump_sim(&new_hole));
+        walk_res = Some((walk_res.unwrap().0,
+                         walk_res.unwrap().1 + 1,
+                         false));
     }
 
-    (jump >= walk, walk + jump)
+    let mut jump_res = None;
+    let mut jump_over = 0;
+    if can_jump
+    {
+        let new_hole = splice(holes, 4);
+        jump_res = Some(should_jump_sim(&new_hole));
+
+        for i in (0..3) {
+            if holes[i] == false {
+                jump_over = jump_over + 1;
+            }
+        }
+        jump_res = Some((jump_res.unwrap().0 + jump_over,
+                         jump_res.unwrap().1 + 4,
+                         true));
+    }
+
+    if walk_res == None && jump_res == None
+    {
+        return (0, 0, false);
+    }
+    if walk_res == None
+    {
+        return jump_res.unwrap();
+    }
+    else if jump_res == None
+    {
+        return walk_res.unwrap();
+    }
+
+    if jump_res.unwrap().0 != walk_res.unwrap().0
+    {
+        if jump_res.unwrap().0 > walk_res.unwrap().0 {
+            return jump_res.unwrap();
+        } else {
+            return walk_res.unwrap();
+        }
+    }
+
+    if walk_res.unwrap().1 <= jump_res.unwrap().1
+    {
+        walk_res.unwrap()
+    }
+    else
+    {
+        jump_res.unwrap()
+    }
 }
 
 #[derive(Debug,PartialEq,Clone,Copy)]
@@ -470,7 +521,6 @@ fn part2(input: &Vec<i64>) -> Result<i64> {
     for i in 0..N {
         let holes = convert_to_hole(&i);
         let jump = should_jump(&holes);
-        let jump = jump.0;
         println!("{} {:?} {}", i, holes, jump);
         if jump {
             minterms.push(i);
@@ -542,39 +592,42 @@ fn part2(input: &Vec<i64>) -> Result<i64> {
         println!("{}", term);
     }
 
-// E'(B' AND H' AND G')
-    let output = "OR C T
-OR E T
-OR F T
-NOT T T
+    let output = "NOT H T
+OR I T
+AND A T
+NOT H J
+OR G J
+AND F J
+OR J T
+OR C J
+AND B J
+AND E T
 OR T J
-NOT C T
-AND D T
-OR T J
-NOT B T
-AND D T
-OR T J
-NOT A T
-OR T J
-NOT I T
-OR T J
+AND A J
+NOT J J
+AND D J
 RUN\n";
     let input_stream = output.chars().map(|x| x as i64);
     let machine = IntCode::init(&input, input_stream);
     let output: Vec<i64> = machine.output_stream().collect();
     let output_string: String = output.iter().map(|x| (*x as u8) as char).collect();
     println!("{}", output_string);
-//    Ok(output[output.len() - 1])
-    Ok(1)
+    Ok(output[output.len() - 1])
+//    Ok(1)
 }
 
-#[cfg(tests)]
+#[cfg(test)]
 mod test {
     use super::*;
     #[test]
     fn test_should_jump() {
-//        assert_eq!(should_jump(vec![true, true, true, true, true, true, true, true, true]).0, false);
-        assert_eq!(should_jump(vec![true, true, true, true, false, true, true, true, false]).0, false);
+        assert_eq!(should_jump(&vec![true, false, true, true, false, true, true, true, true]), true);
+        assert_eq!(should_jump(&vec![false, true, true, true, false, true, false, true, false]), true);
+        assert_eq!(should_jump(&vec![true, true, true, true, false, true, false, true, false]), false);
+        assert_eq!(should_jump(&vec![true, true, true, true, false, true, true, false, true]), false);
+        assert_eq!(should_jump(&vec![true, true, true, true, false, true, true, true, false]), false);
+        assert_eq!(should_jump(&vec![true, true, true, true, false, false, true, false, false]), false);
+        assert_eq!(should_jump(&vec![true, true, true, true, false, false, true, false, true]), false);
     }
 }
 /*
